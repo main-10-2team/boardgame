@@ -203,11 +203,3 @@ SPECTACULAR_SETTINGS = {
     ],
 }
 
-SENTRY_DSN = os.getenv("SENTRY_DSN")
-if not SENTRY_DSN:
-    raise ValueError("SENTRY_DSN must be set. For Error Logging")
-sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", 1)),
-    profiles_sample_rate=float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", 1)),
-)

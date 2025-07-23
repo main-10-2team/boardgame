@@ -47,7 +47,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pw1234
       POSTGRES_ROOT_USER: postgres
-      POSTGRES_DB: ozcoding_externship
+      POSTGRES_DB: boardq
     ports:
       - 5432:5432
     volumes:

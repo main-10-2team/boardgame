@@ -24,6 +24,8 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "apps.users",
+    "apps.games",
 ]
 
 THIRD_PARTY_APPS = [
@@ -158,7 +160,7 @@ CORS_ALLOW_HEADERS = [
     "authorization",
     "content-type",
     "origin",
-    "user-agent",
+    "users-agent",
     "x-csrftoken",
     "x-requested-with",
 ]
@@ -203,11 +205,4 @@ SPECTACULAR_SETTINGS = {
     ],
 }
 
-SENTRY_DSN = os.getenv("SENTRY_DSN")
-if not SENTRY_DSN:
-    raise ValueError("SENTRY_DSN must be set. For Error Logging")
-sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", 1)),
-    profiles_sample_rate=float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", 1)),
-)
+

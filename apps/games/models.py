@@ -69,8 +69,8 @@ class Genre(models.Model):
 
     class Meta:
         db_table = 'genre'
-        verbose_name = '자르'
-        verbose_name_plural = '자르 목록'
+        verbose_name = '장르'
+        verbose_name_plural = '장르 목록'
 
 
 class GameGenre(models.Model):
@@ -81,8 +81,8 @@ class GameGenre(models.Model):
 
     class Meta:
         db_table = 'game_genre'
-        verbose_name = '게임장르'
-        verbose_name_plural = '게임장르'
+        verbose_name = '게임 장르'
+        verbose_name_plural = '게임 장르'
         unique_together = ('game', 'genre')
 
 

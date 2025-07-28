@@ -52,7 +52,7 @@ class GameListView(APIView):
 
         if request.user.is_authenticated:
             games_queryset = games_queryset.annotate(
-                is_liked_by_user=Exists(Like.objects.filter(user=request.user, game=OuterRef("pk")))
+                is_liked_by_user=Exists(Like.objects.filter(user_id=request.user.id, game=OuterRef("pk")))
             )
 
         paginator = PageNumberPagination()

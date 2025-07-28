@@ -36,7 +36,7 @@ class GameSerializer(serializers.ModelSerializer[Game]):
         return f"{obj.playtime_min_minutes}-{obj.playtime_max_minutes}min"
 
     def get_genre_name(self, obj: Game) -> str:
-        genres = obj.gamegenre_set.all().select_related("genre")
+        genres = obj.game_genres.all().select_related("genre")
         return ", ".join([g.genre.name for g in genres])
 
     def get_is_liked(self, obj: Game) -> bool:

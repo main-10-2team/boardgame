@@ -10,7 +10,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.games.models import Game, Like, Genre
+from apps.games.models import Game, Genre, Like
 from apps.games.serializers.game import GameSerializer
 
 
@@ -31,7 +31,7 @@ class GameListView(APIView):
                 required=False,
                 type=OpenApiTypes.STR,
                 enum=["popularity", "rating", "latest"],
-                default="popularity"
+                default="popularity",
             )
         ],
         responses={200: GameSerializer(many=True), 400: OpenApiTypes.OBJECT},
@@ -52,7 +52,6 @@ class GameListView(APIView):
 
         games_queryset = Game.objects.all().prefetch_related("genres").order_by(order_by_field)
 
-
         if request.user.is_authenticated:
             games_queryset = games_queryset.annotate(
                 is_liked_by_user=Exists(Like.objects.filter(user_id=request.user.id, game=OuterRef("pk")))
@@ -62,9 +61,11 @@ class GameListView(APIView):
         genres = Genre.objects.all()
 
         for genre in genres:
-            genre_games = Game.objects.filter(
-                gamegenre__genre=genre
-            ).prefetch_related("gamegenre_set__genre").order_by("-like_count")[:5]
+            genre_games = (
+                Game.objects.filter(gamegenre__genre=genre)
+                .prefetch_related("gamegenre_set__genre")
+                .order_by("-like_count")[:5]
+            )
 
             if request.user.is_authenticated:
                 genre_games = genre_games.annotate(
@@ -75,7 +76,7 @@ class GameListView(APIView):
             genre_rankings[genre.name] = genre_serializer.data
 
         paginator = PageNumberPagination()
-        request.parser_context['genre_rankings'] = genre_rankings
+        request.parser_context["genre_rankings"] = genre_rankings
 
         paginated_games = paginator.paginate_queryset(games_queryset, request, view=self)
 
@@ -89,7 +90,3 @@ class GameListView(APIView):
         response.data["genre_rankings"] = genre_rankings
 
         return response
-
-
-
-

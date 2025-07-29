@@ -1,14 +1,12 @@
 from rest_framework import serializers
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
 
 from apps.games.models import Game, Like
 
 
 class GameSerializer(serializers.ModelSerializer[Game]):
-    playtime_minutes = serializers.SerializerMethodField()
     genre_name = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
+    # play_time = serializers.SerializerMethodField(method_name="get_playtime_minutes_formatted")
 
     class Meta:
         model = Game
@@ -19,7 +17,8 @@ class GameSerializer(serializers.ModelSerializer[Game]):
             "description",
             "min_players",
             "max_players",
-            "playtime_minutes",
+            "playtime_min_minutes",
+            "playtime_max_minutes",
             "difficulty",
             "thumbnail_url",
             "rules_url",
@@ -34,15 +33,23 @@ class GameSerializer(serializers.ModelSerializer[Game]):
 
     def get_playtime_minutes(self, obj: Game) -> str:
         if obj.playtime_min_minutes == obj.playtime_max_minutes:
-            return f"{obj.playtime_min_minutes}min"
-        return f"{obj.playtime_min_minutes}-{obj.playtime_max_minutes}min"
+            return f"{obj.playtime_min_minutes}분"
+        return f"{obj.playtime_min_minutes}-{obj.playtime_max_minutes}분"
 
     def get_genre_name(self, obj: Game) -> str:
         genres = obj.game_genres.all().select_related("genre")
         return ", ".join([g.genre.name for g in genres])
 
+    # def get_is_liked(self, obj: Game) -> bool:
+    #     request = self.context.get("request")
+    #     if request and request.user.is_authenticated:
+    #         return Like.objects.filter(user=request.user, game=obj).exists()
+    #     return False
+
     def get_is_liked(self, obj: Game) -> bool:
         request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return Like.objects.filter(user=request.user, game=obj).exists()
+        if request and hasattr(request, "user") and request.user.is_authenticated:
+            if hasattr(obj, "is_liked_by_user"):
+                return bool(obj.is_liked_by_user)
+            return bool(Like.objects.filter(user=request.user, game=obj).exists())
         return False

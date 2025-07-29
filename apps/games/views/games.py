@@ -48,11 +48,11 @@ class GameListView(APIView):
 
         order_by_field = valid_sort_fields[sort_by]
 
-        games_queryset = Game.objects.all().prefetch_related("gamegenre_set__genre").order_by(order_by_field)
+        games_queryset = Game.objects.all().prefetch_related("genres").order_by(order_by_field)
 
         if request.user.is_authenticated:
             games_queryset = games_queryset.annotate(
-                is_liked_by_user=Exists(Like.objects.filter(user=request.user, game=OuterRef("pk")))
+                is_liked_by_user=Exists(Like.objects.filter(user_id=request.user.id, game=OuterRef("pk")))
             )
 
         paginator = PageNumberPagination()

@@ -1,4 +1,5 @@
 from django.contrib.admin.templatetags.admin_list import paginator_number
+from django.contrib.auth import get_user_model
 from django.db.models import Exists, OuterRef
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -62,14 +63,14 @@ class GameListView(APIView):
 
         for genre in genres:
             genre_games = (
-                Game.objects.filter(gamegenre__genre=genre)
-                .prefetch_related("gamegenre_set__genre")
+                Game.objects.filter(game_genres__genre=genre)
+                .prefetch_related("game_genres__genre")
                 .order_by("-like_count")[:5]
             )
 
             if request.user.is_authenticated:
                 genre_games = genre_games.annotate(
-                    is_liked_by_user=Exists(Like.objects.filter(user=request.user, game=OuterRef("pk")))
+                    is_liked_by_user=Exists(Like.objects.filter(user_id=request.user.id, game=OuterRef("pk")))
                 )
 
             genre_serializer = self.serializer_class(genre_games, many=True, context={"request": request})

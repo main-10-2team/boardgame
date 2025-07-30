@@ -1,13 +1,13 @@
 services:
   django:
-    container_name: django-boardgame
+    container_name: django-boardq
     env_file:
       - envs/.local.env
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.local
     build:
       context: .
-    working_dir: /boardgame
+    working_dir: /boardq
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
@@ -15,8 +15,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - static_volume:/boardgame/app/static
-      - media_volume:/boardgame/app/media
+      - static_volume:/boardq/app/static
+      - media_volume:/boardq/app/media
     networks:
       - ws
     depends_on:
@@ -27,7 +27,7 @@ services:
 
   nginx:
     image: nginx:latest
-    container_name: nginx-boardgame
+    container_name: nginx-boardq
     ports:
       - "80:80"
       - "443:443"
@@ -35,19 +35,19 @@ services:
       - django
     volumes:
       - ./resources/nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
-      - static_volume:/boardgame/app/static
-      - media_volume:/boardgame/app/media
+      - static_volume:/boardq/app/static
+      - media_volume:/boardq/app/media
     networks:
       - ws
 
   db:
     image: postgres:14
-    container_name: postgres-boardgame
+    container_name: postgres-boardq
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pw1234
       POSTGRES_ROOT_USER: postgres
-      POSTGRES_DB: boardgame
+      POSTGRES_DB: boardq
     ports:
       - 5432:5432
     volumes:
@@ -63,7 +63,7 @@ services:
 
   redis:
     image: redis:latest
-    container_name: redis-boardgame
+    container_name: redis-boardq
     ports:
       - "6379:6379"
     networks:

@@ -187,7 +187,7 @@ class SignupView(APIView):
 
         # 사용자 생성
         try:
-            user: User = serializer.save()  # type: ignore
+            user: User = serializer.save()
 
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")  # type: ignore
             refresh = RefreshToken.for_user(user)

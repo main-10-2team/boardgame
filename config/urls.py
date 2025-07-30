@@ -8,6 +8,7 @@ from drf_spectacular.views import (
 
 urlpatterns: list[URLPattern | URLResolver] = [
     path("api/v1/", include("apps.games.urls"), name="games"),
+    path("api/v1/", include("apps.users.urls"), name="users"),
 ]
 
 if settings.DEBUG:

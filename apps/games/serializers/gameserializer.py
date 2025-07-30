@@ -19,7 +19,7 @@ class GameSerializer(serializers.ModelSerializer[Game]):
             "max_players",
             "playtime_minutes",
             "difficulty",
-            "image_url",
+            "thumbnail_url",
             "rules_url",
             "genre_name",
             "average_rating",

@@ -20,6 +20,12 @@ dependencies = [
     "djangorestframework-simplejwt (>=5.5.0,<6.0.0)",
     "django-filter (>=25.1,<26.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "celery (>=5.4.0,<5.4.1)",
+    "kombu (>=5.5.4,<6.0.0)",
+    "amqp (>=5.3.1,<6.0.0)",
+    "boto3 (>=1.39.15,<2.0.0)",
+    "pillow (>=11.3.0,<12.0.0)",
+    "drf-spectacular (>=0.28.0,<0.29.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]

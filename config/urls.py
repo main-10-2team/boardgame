@@ -10,7 +10,11 @@ from drf_spectacular.views import (
 urlpatterns: list[URLPattern | URLResolver] = [
     path("admin/", admin.site.urls),
     path("api/v1/", include("apps.games.urls"), name="games"),
+<<<<<<< Updated upstream
     path("api/v1/", include("apps.users.urls"), name="users"),
+=======
+    path("api/v1/", include("apps.users.urls"), name="signup"),
+>>>>>>> Stashed changes
 ]
 
 if settings.DEBUG:

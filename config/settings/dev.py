@@ -1,7 +1,5 @@
 from config.settings.base import *
 
-from boardq.config.settings.base import BASE_DIR
-
 DEBUG = True
 ALLOWED_HOSTS = ["54.180.237.77"]
 
@@ -14,4 +12,5 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 INTERNAL_IPS = [
     "127.0.0.1",
+
 ]

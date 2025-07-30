@@ -15,7 +15,7 @@ from apps.users.models import User, UserPreferenceGenre, UserPreferencePlaytime
 from core.utils.s3_file_upload import S3Uploader  # S3Uploader 클래스 임포트
 
 
-class SignupSerializer(serializers.Serializer):#type: ignore
+class SignupSerializer(serializers.Serializer):  # type: ignore
     email = serializers.EmailField(max_length=255, required=True)
     password = serializers.CharField(min_length=8, write_only=True, required=True)
     nickname = serializers.CharField(min_length=2, max_length=20, required=True)

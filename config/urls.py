@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib import admin
 from django.urls import URLPattern, URLResolver, include, path
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -7,6 +8,7 @@ from drf_spectacular.views import (
 )
 
 urlpatterns: list[URLPattern | URLResolver] = [
+    path("admin/", admin.site.urls),
     path("api/v1/", include("apps.games.urls"), name="games"),
     path("api/v1/", include("apps.users.urls"), name="users"),
 ]

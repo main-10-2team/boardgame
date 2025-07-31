@@ -18,10 +18,19 @@ class ReviewSerializer(serializers.ModelSerializer[Review]):
 
     status = serializers.BooleanField(read_only=True)
 
-
     class Meta:
         model = Review
 
-        fields = ["review_id", "game_id", "user_id", "username", "rating", "content", "created_at", "updated_at", "status"]
+        fields = [
+            "review_id",
+            "game_id",
+            "user_id",
+            "username",
+            "rating",
+            "content",
+            "created_at",
+            "updated_at",
+            "status",
+        ]
 
         read_only_fields = fields

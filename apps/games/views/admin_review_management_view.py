@@ -90,7 +90,7 @@ from apps.users.models import User
 class AdminReviewListview(generics.ListAPIView[Review]):
 
     serializer_class = ReviewSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser, IsAuthenticated]
     queryset = Review.objects.all().select_related("user", "game")
 
     def get_queryset(self) -> QuerySet[Review]:

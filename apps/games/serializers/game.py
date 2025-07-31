@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
 from apps.games.models import Game, Like
 

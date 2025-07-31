@@ -1,3 +1,5 @@
+from django.contrib.admin.templatetags.admin_list import paginator_number
+from django.contrib.auth import get_user_model
 from django.db.models import Exists, OuterRef
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -9,8 +11,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.games.models import Game, Like
-from apps.games.serializers.gameserializer import GameSerializer
+from apps.games.models import Game, Genre, Like
+from apps.games.serializers.game import GameSerializer
 
 
 class GameListView(APIView):
@@ -30,6 +32,7 @@ class GameListView(APIView):
                 required=False,
                 type=OpenApiTypes.STR,
                 enum=["popularity", "rating", "latest"],
+                default="popularity",
             )
         ],
         responses={200: GameSerializer(many=True), 400: OpenApiTypes.OBJECT},
@@ -55,8 +58,26 @@ class GameListView(APIView):
                 is_liked_by_user=Exists(Like.objects.filter(user_id=request.user.id, game=OuterRef("pk")))
             )
 
+        genre_rankings = {}
+        genres = Genre.objects.all()
+
+        for genre in genres:
+            genre_games = (
+                Game.objects.filter(game_genres__genre=genre)
+                .prefetch_related("game_genres__genre")
+                .order_by("-like_count")[:5]
+            )
+
+            if request.user.is_authenticated:
+                genre_games = genre_games.annotate(
+                    is_liked_by_user=Exists(Like.objects.filter(user_id=request.user.id, game=OuterRef("pk")))
+                )
+
+            genre_serializer = self.serializer_class(genre_games, many=True, context={"request": request})
+            genre_rankings[genre.name] = genre_serializer.data
+
         paginator = PageNumberPagination()
-        paginator.page_size_query_param = "page_size"
+        request.parser_context["genre_rankings"] = genre_rankings
 
         paginated_games = paginator.paginate_queryset(games_queryset, request, view=self)
 
@@ -65,4 +86,8 @@ class GameListView(APIView):
 
         serializer = self.serializer_class(paginated_games, many=True, context={"request": request})
 
-        return paginator.get_paginated_response(serializer.data)
+        response = paginator.get_paginated_response(serializer.data)
+
+        response.data["genre_rankings"] = genre_rankings
+
+        return response

@@ -7,5 +7,6 @@ from apps.games.views.admin_review_management_view import AdminReviewListview
 
 urlpatterns = [
     path("games/", GameListView.as_view(), name="game-list"),
+    path("games/search", GameSearchView.as_view(), name="game-search"),
     path("admin/reviews/", AdminReviewListview.as_view(), name="admin-review-list"),
 ]

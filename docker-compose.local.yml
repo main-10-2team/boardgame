@@ -75,6 +75,27 @@ services:
       retries: 5
       start_period: 5s
 
+  celery:
+    container_name: celery_service # 컨테이너 이름
+    image: boardgame-django # Django 앱의 Docker 이미지를 재사용
+    env_file: # django 서비스와 동일하게 env_file 사용
+      - envs/.local.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local # Django 설정 모듈 명시
+      # DB 및 RabbitMQ 환경 변수는 env_file에서 로드되거나 Redis를 브로커로 사용하므로 제거
+    working_dir: /boardq # django 서비스의 working_dir에 맞춰 작업 디렉토리 설정
+    command: >
+      bash -c "poetry run celery -A config worker -l info"
+
+    depends_on:
+      django:
+        condition: service_started # Django 서비스가 시작된 후 Celery가 시작되도록 의존성 설정
+      redis:
+        condition: service_healthy # Redis 서비스가 healthy 상태인 후 Celery가 시작되도록 의존성 설정
+
+    networks: # <--- 이 부분 추가
+        - ws
+
 networks:
   ws:
     driver: bridge

@@ -19,7 +19,7 @@ class User(AbstractBaseUser):
     name = models.CharField(max_length=30)
     email = models.EmailField(unique=True, null=False)
     nickname = models.CharField(max_length=20, unique=True, null=False, help_text="2-20 characters")
-    profile_image = models.URLField(null=True, blank=True)
+    profile_image = models.ImageField(upload_to="profile_images/", null=True, blank=True)
     preferred_genres = models.ManyToManyField(
         "games.Genre", through="UserPreferenceGenre", related_name="preferred_by_users", blank=True
     )  # type: ignore

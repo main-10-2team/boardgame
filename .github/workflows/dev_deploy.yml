@@ -108,3 +108,10 @@ jobs:
             --protocol tcp --port 22 \
             --cidr ${{ steps.ip.outputs.ipv4 }}/32 \
             --region ap-northeast-2
+          
+          docker run -d \
+              --name celery \
+              --network ws \
+              --env-file ${{ secrets.ENV_FILE_NAME }} \
+              ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}:django-dev \
+              sh -c "celery -A config worker --beat --scheduler django --loglevel=info"

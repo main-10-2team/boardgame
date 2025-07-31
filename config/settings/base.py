@@ -137,7 +137,7 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
-    "USER_ID_FIELD": "id",
+    "USER_ID_FIELD": "user_id",
     "USER_ID_CLAIM": "user_id",
 }
 
@@ -205,3 +205,21 @@ SPECTACULAR_SETTINGS = {
         }
     ],
 }
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")  # .local.env 에 적어놓겠슴다!
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+
+# NCP Object Storage 설정
+NCP_ACCESS_KEY_ID = os.getenv("NCP_ACCESS_KEY_ID")
+NCP_SECRET_ACCESS_KEY = os.getenv("NCP_SECRET_ACCESS_KEY")
+NCP_REGION = os.getenv("NCP_REGION", "kr-standard")  # 한국 리전 기본값
+NCP_STORAGE_BUCKET_NAME = os.getenv("NCP_STORAGE_BUCKET_NAME")
+NCP_ENDPOINT_URL = os.getenv("NCP_ENDPOINT_URL", "https://kr.object.ncloudstorage.com")

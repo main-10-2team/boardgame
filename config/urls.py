@@ -11,6 +11,7 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("admin/", admin.site.urls),
     path("api/v1/", include("apps.games.urls"), name="games"),
     path("api/v1/", include("apps.users.urls"), name="users"),
+    path("api/v1/", include("apps.users.urls"), name="signup"),
 ]
 
 if settings.DEBUG:

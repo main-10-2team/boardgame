@@ -2,6 +2,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
 
 from apps.games.models import Genre, PlaytimeCategory
+from apps.users.manage import CustomUserManager
 
 
 class User(AbstractBaseUser):
@@ -36,6 +37,7 @@ class User(AbstractBaseUser):
     updated_at = models.DateTimeField(auto_now=True)
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["nickname", "birth", "phone_number"]
+    objects = CustomUserManager()
 
     class Meta:
         db_table = "user"

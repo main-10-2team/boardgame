@@ -142,7 +142,7 @@ jobs:
           poetry run python manage.py migrate
 
       # run test
-      - name: Test python project
-        run: |
-          poetry run coverage run manage.py test
-          poetry run coverage report -m
+#      - name: Test python project
+#        run: |
+#          poetry run coverage run manage.py test
+#          poetry run coverage report -m

@@ -2,8 +2,8 @@ from typing import Any  # *args, **kwargs에 Any 타입을 사용하려면 임�
 
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from drf_spectacular.types import OpenApiTypes # OpenApiTypes 임포트가 되어있는지 확인해주세요!
+from drf_spectacular.types import OpenApiTypes  # OpenApiTypes 임포트가 되어있는지 확인해주세요!
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
@@ -21,17 +21,72 @@ from apps.users.models import User
     summary="관리자 리뷰 목록 조회",
     # API에 대한 상세 설명
     description="관리자가 게임 ID, 작성자 ID, 리뷰 내용 키워드 등의 조건으로 리뷰를 검색하고 목록을 조회합니다. 페이징을 이용하여 조회합니다.",
-    parameters=[ # <-- 이 부분이 누락되었을 수 있으니 꼭 포함해주세요!
-        OpenApiParameter(name='game_id', type=OpenApiTypes.INT, location=OpenApiParameter.QUERY, description='특정 게임의 리뷰를 조회할 경우 게임 ID', required=False),
-        OpenApiParameter(name='user_id', type=OpenApiTypes.INT, location=OpenApiParameter.QUERY, description='특정 작성자의 리뷰를 조회할 경우 사용자 ID', required=False),
-        OpenApiParameter(name='content', type=OpenApiTypes.STR, location=OpenApiParameter.QUERY, description='리뷰 내용에 포함된 키워드 (Review 모델의 content 필드)', required=False),
-        OpenApiParameter(name='min_rating', type=OpenApiTypes.FLOAT, location=OpenApiParameter.QUERY, description='최소 평점 (0.0~5.0) (Review 모델의 rating 필드)', required=False),
-        OpenApiParameter(name='max_rating', type=OpenApiTypes.FLOAT, location=OpenApiParameter.QUERY, description='최대 평점 (0.0~5.0) (Review 모델의 rating 필드)', required=False),
-        OpenApiParameter(name='page', type=OpenApiTypes.INT, location=OpenApiParameter.QUERY, description='조회할 페이지 번호 (기본값: 1)', required=False),
-        OpenApiParameter(name='size', type=OpenApiTypes.INT, location=OpenApiParameter.QUERY, description='페이지당 리뷰 개수 (기본값: 20)', required=False),
-        OpenApiParameter(name='sort', type=OpenApiTypes.STR, location=OpenApiParameter.QUERY, description='정렬 기준 (예: created_at_desc, rating_asc, rating_desc)', required=False),
-        OpenApiParameter(name='status', type=OpenApiTypes.STR, location=OpenApiParameter.QUERY, description='리뷰 상태 (ACTIVE, DELETED, HIDDEN)', required=False),
-    ])
+    parameters=[  # <-- 이 부분이 누락되었을 수 있으니 꼭 포함해주세요!
+        OpenApiParameter(
+            name="game_id",
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description="특정 게임의 리뷰를 조회할 경우 게임 ID",
+            required=False,
+        ),
+        OpenApiParameter(
+            name="user_id",
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description="특정 작성자의 리뷰를 조회할 경우 사용자 ID",
+            required=False,
+        ),
+        OpenApiParameter(
+            name="content",
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description="리뷰 내용에 포함된 키워드 (Review 모델의 content 필드)",
+            required=False,
+        ),
+        OpenApiParameter(
+            name="min_rating",
+            type=OpenApiTypes.FLOAT,
+            location=OpenApiParameter.QUERY,
+            description="최소 평점 (0.0~5.0) (Review 모델의 rating 필드)",
+            required=False,
+        ),
+        OpenApiParameter(
+            name="max_rating",
+            type=OpenApiTypes.FLOAT,
+            location=OpenApiParameter.QUERY,
+            description="최대 평점 (0.0~5.0) (Review 모델의 rating 필드)",
+            required=False,
+        ),
+        OpenApiParameter(
+            name="page",
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description="조회할 페이지 번호 (기본값: 1)",
+            required=False,
+        ),
+        OpenApiParameter(
+            name="size",
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description="페이지당 리뷰 개수 (기본값: 20)",
+            required=False,
+        ),
+        OpenApiParameter(
+            name="sort",
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description="정렬 기준 (예: created_at_desc, rating_asc, rating_desc)",
+            required=False,
+        ),
+        OpenApiParameter(
+            name="status",
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description="리뷰 상태 (ACTIVE, DELETED, HIDDEN)",
+            required=False,
+        ),
+    ],
+)
 class AdminReviewListview(generics.ListAPIView[Review]):
 
     serializer_class = ReviewSerializer
@@ -90,7 +145,7 @@ class AdminReviewListview(generics.ListAPIView[Review]):
 
         # 'status' 파라미터 필터링 로직 추가 및 유효성 검사
         if status_param is not None:
-            valid_statuses = ['ACTIVE', 'DELETED', 'HIDDEN']
+            valid_statuses = ["ACTIVE", "DELETED", "HIDDEN"]
             if status_param.upper() not in valid_statuses:
                 raise ValueError(f"Invalid status. Must be one of {', '.join(valid_statuses)}.")
             filters &= Q(status=status_param.upper())

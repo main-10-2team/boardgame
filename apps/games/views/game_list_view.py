@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.games.models import Game, Genre, Like
-from apps.games.serializers.game import GameSerializer
+from apps.games.serializers.game_serializer import GameSerializer
 from apps.users.models import User
 
 

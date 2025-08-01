@@ -5,7 +5,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.users.serializers.auth_code_email_serializers import (
+from apps.users.serializers.auth.auth_code_email_serializers import (
     EmailSendCodeSerializer,
     EmailVerifyCodeSerializer,
 )

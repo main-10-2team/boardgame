@@ -1,10 +1,6 @@
 import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional
 
-import redis
 from django.contrib.auth import login
-from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -15,11 +11,11 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.users.models import User
-from apps.users.serializers.auth_code_email_serializers import (
+from apps.users.serializers.auth.auth_code_email_serializers import (
     EmailSendCodeSerializer,
     EmailVerifyCodeSerializer,
 )
-from apps.users.serializers.auth_signup_serializers import SignupSerializer
+from apps.users.serializers.auth.auth_signup_serializers import SignupSerializer
 from apps.users.tasks import send_verification_email_task
 from apps.users.utils.base62 import generate_base62_code
 from apps.users.utils.redis_utils import (
@@ -189,7 +185,7 @@ class SignupView(APIView):
         try:
             user: User = serializer.save()
 
-            login(request, user, backend="django.contrib.auth.backends.ModelBackend")  # type: ignore
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             refresh = RefreshToken.for_user(user)
 
             preferred_playtime_names = [pt.playtime_category.name for pt in user.user_preferred_playtimes.all()]

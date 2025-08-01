@@ -25,7 +25,7 @@ class GameFilterView(APIView):
             OpenApiParameter(name="players", type=OpenApiTypes.STR, description="예: 2, 3-4"),
             OpenApiParameter(name="playtime_min_minutes", type=OpenApiTypes.INT, description="최소 플레이 시간(분)"),
             OpenApiParameter(name="playtime_max_minutes", type=OpenApiTypes.INT, description="최대 플레이 시간(분)"),
-            OpenApiParameter(name="difficulty", type=OpenApiTypes.STR, description="예: 3.0, 4.5, 5.0 "),
+            OpenApiParameter(name="difficulty", type=OpenApiTypes.STR, description="예: '쉬움', '중급', '어려움' "),
             OpenApiParameter(name="page", type=OpenApiTypes.INT, description="페이지 번호"),
             # OpenApiParameter(name="page_size", type=OpenApiTypes.INT, description="페이지 당 개수"),
         ],
@@ -68,19 +68,29 @@ class GameFilterView(APIView):
             except ValueError:
                 return Response({"detail": "최대 플레이 시간이 유효하지 않습니다."}, status=400)
 
+        difficulty_map = {
+            "쉬움": (0.0, 2.0),
+            "중급": (2.0, 4.0),
+            "어려움": (4.0, 5.0),
+        }
+
         if difficulty_param:
-            try:
-                difficulty = float(difficulty_param)
-
-                if 0.0 <= difficulty <= 5.0:
-                    lower = round(difficulty - 0.5, 1)
-                    upper = round(difficulty + 0.5, 1)
-
-                    queryset = queryset.filter(difficulty__gte=lower, difficulty__lt=upper)
-                else:
-                    return Response({"detail": "난이도는 0.0부터 5.0 사이의 숫자여야 합니다."}, status=400)
-            except ValueError:
-                return Response({"detail": "난이도는 숫자로 입력해야 합니다. 예: 3, 2.5, 4.0"}, status=400)
+            if difficulty_param in difficulty_map:
+                lower, upper = difficulty_map[difficulty_param]
+                difficulty = difficulty_param
+                queryset = queryset.filter(difficulty__gte=lower, difficulty__lt=upper)
+            else:
+                try:
+                    difficulty_float = float(difficulty_param)
+                    if 0.0 <= difficulty_float <= 5.0:
+                        lower = round(difficulty_float - 0.5, 1)
+                        upper = round(difficulty_float + 0.5, 1)
+                        difficulty = difficulty_float
+                        queryset = queryset.filter(difficulty__gte=lower, difficulty__lt=upper)
+                    else:
+                        raise ValueError
+                except ValueError:
+                    return Response({"detail": "난이도는 '쉬움', '중급', '어려움' 중 하나여야합니다."}, status=400)
 
         paginator = PageNumberPagination()
         paginator.page_size_query_param = "page_size"

@@ -31,10 +31,5 @@ class GameFilterSerializer(serializers.ModelSerializer[Game]):
     def get_play_time(self, obj: Game) -> str:
         return f"{obj.playtime_min_minutes}~{obj.playtime_max_minutes}분"
 
-    def get_difficulty(self, obj: Game) -> str:
-        if obj.difficulty < 2:
-            return "쉬움"
-        elif obj.difficulty < 4:
-            return "중급"
-        else:
-            return "어려움"
+    def get_difficulty(self, obj: Game) -> float:
+        return round(obj.difficulty, 2)

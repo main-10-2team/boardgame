@@ -85,7 +85,7 @@ class GameFilterView(APIView):
                     if 0.0 <= difficulty_float <= 5.0:
                         lower = round(difficulty_float - 0.5, 1)
                         upper = round(difficulty_float + 0.5, 1)
-                        difficulty = difficulty_float
+                        difficulty = str(difficulty_float)
                         queryset = queryset.filter(difficulty__gte=lower, difficulty__lt=upper)
                     else:
                         raise ValueError

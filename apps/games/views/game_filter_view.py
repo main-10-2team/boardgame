@@ -1,12 +1,13 @@
 from typing import Any, Dict
+
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
-from rest_framework.exceptions import ValidationError
+from rest_framework.views import APIView
 
 from apps.games.models import Game
 from apps.games.serializers.game_filter_serializer import GameFilterSerializer
@@ -53,21 +54,19 @@ class GameFilterView(APIView):
             except ValueError:
                 raise ValidationError({"detail": "플레이어 수는 숫자여야 합니다. 예: 2, 4, 6 등"})
 
-
         if playtime_min_minutes is not None:
             try:
-                playtime_min_minutes = int(playtime_min_minutes)
-                queryset = queryset.filter(playtime_min_minutes__gte=playtime_min_minutes)
+                playtime_min = int(playtime_min_minutes)
+                queryset = queryset.filter(playtime_min_minutes__gte=playtime_min)
             except ValueError:
                 return Response({"detail": "최소 플레이 시간이 유효하지 않습니다."}, status=400)
 
         if playtime_max_minutes is not None:
             try:
-                playtime_max_minutes = int(playtime_max_minutes)
-                queryset = queryset.filter(playtime_max_minutes__lte=playtime_max_minutes)
+                playtime_max = int(playtime_max_minutes)
+                queryset = queryset.filter(playtime_max_minutes__lte=playtime_max)
             except ValueError:
                 return Response({"detail": "최대 플레이 시간이 유효하지 않습니다."}, status=400)
-
 
         if difficulty_param:
             try:
@@ -79,15 +78,9 @@ class GameFilterView(APIView):
 
                     queryset = queryset.filter(difficulty__gte=lower, difficulty__lt=upper)
                 else:
-                    return Response(
-                        {"detail": "난이도는 0.0부터 5.0 사이의 숫자여야 합니다."},
-                        status=400
-                    )
+                    return Response({"detail": "난이도는 0.0부터 5.0 사이의 숫자여야 합니다."}, status=400)
             except ValueError:
-                return Response(
-                    {"detail": "난이도는 숫자로 입력해야 합니다. 예: 3, 2.5, 4.0"},
-                    status=400
-                )
+                return Response({"detail": "난이도는 숫자로 입력해야 합니다. 예: 3, 2.5, 4.0"}, status=400)
 
         paginator = PageNumberPagination()
         paginator.page_size_query_param = "page_size"

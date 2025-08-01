@@ -1,8 +1,9 @@
 from rest_framework import serializers
+
 from apps.games.models import Game
 
 
-class GameFilterSerializer(serializers.ModelSerializer):
+class GameFilterSerializer(serializers.ModelSerializer[Game]):
     game_id = serializers.IntegerField(source="pk")
     title = serializers.CharField()
     image_url = serializers.URLField(source="thumbnail_url")
@@ -37,5 +38,3 @@ class GameFilterSerializer(serializers.ModelSerializer):
             return "중급"
         else:
             return "어려움"
-
-

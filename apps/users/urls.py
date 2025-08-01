@@ -4,6 +4,8 @@ from apps.users.views.auth.auth_code_email_view import (
     SendEmailCodeView,
     VerifyEmailCodeView,
 )
+from apps.users.views.auth.auth_email_login_views import EmailLoginAPIView
+from apps.users.views.auth.auth_logout_views import LogoutView
 from apps.users.views.auth.auth_signup_views import SignupView
 from apps.users.views.profile_views import UserProfileView
 
@@ -15,4 +17,6 @@ urlpatterns = [
     path("auth/signup/", SignupView.as_view(), name="signup"),
     path("auth/send-code/", SendEmailCodeView.as_view(), name="send-email-code"),
     path("auth/verify-code/", VerifyEmailCodeView.as_view(), name="verify-email-code"),
+    path("auth/login/", EmailLoginAPIView.as_view(), name="login"),
+    path("auth/logout/", LogoutView.as_view(), name="logout"),
 ]

@@ -225,7 +225,7 @@ class AdminReviewDeleteView(generics.DestroyAPIView[Review]):
 
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer  # 시리얼라이저는 필수 속성이므로 추가했습니다.
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser, IsAuthenticated]
     lookup_field = "review_id"
 
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:

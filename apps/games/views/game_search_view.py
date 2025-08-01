@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.games.models import Game
-from apps.games.serializers.game_search import GameSearchSerializer
+from apps.games.serializers.game_search_serializer import GameSearchSerializer
 
 
 class GameSearchView(APIView):
@@ -21,7 +21,7 @@ class GameSearchView(APIView):
     @extend_schema(
         summary="게임 검색 API",
         description="게임 제목으로 키워드를 포함하는 게임을 검색합니다. 검색 결과는 관련도 순으로 정렬됩니다.",
-        tags=["Games - Search"],
+        tags=["게임"],
         parameters=[
             OpenApiParameter(
                 name="keyword",

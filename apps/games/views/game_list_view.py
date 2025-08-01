@@ -1,5 +1,3 @@
-from typing import cast
-
 from django.db.models import Exists, OuterRef
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -12,8 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.games.models import Game, Genre, Like
-from apps.games.serializers.game import GameSerializer
-from apps.users.models import User
+from apps.games.serializers.game_serializer import GameSerializer
 
 
 class GameListView(APIView):
@@ -39,7 +36,6 @@ class GameListView(APIView):
         responses={200: GameSerializer(many=True), 400: OpenApiTypes.OBJECT},
     )
     def get(self, request: Request) -> Response:
-        user = cast(User, request.user)
         sort_by = request.query_params.get("sort_by", "popularity")
 
         valid_sort_fields = {
@@ -57,7 +53,7 @@ class GameListView(APIView):
 
         if request.user.is_authenticated:
             games_queryset = games_queryset.annotate(
-                is_liked_by_user=Exists(Like.objects.filter(user_id=user.user_id, game=OuterRef("pk")))
+                is_liked_by_user=Exists(Like.objects.filter(user_id=request.user.id, game=OuterRef("pk")))
             )
 
         genre_rankings = {}
@@ -72,7 +68,7 @@ class GameListView(APIView):
 
             if request.user.is_authenticated:
                 genre_games = genre_games.annotate(
-                    is_liked_by_user=Exists(Like.objects.filter(user_id=user.user_id, game=OuterRef("pk")))
+                    is_liked_by_user=Exists(Like.objects.filter(user_id=request.user.id, game=OuterRef("pk")))
                 )
 
             genre_serializer = self.serializer_class(genre_games, many=True, context={"request": request})

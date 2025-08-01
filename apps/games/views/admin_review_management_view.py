@@ -3,7 +3,7 @@ from typing import Any  # *args, **kwargs에 Any 타입을 사용하려면 임�
 from django.db.models import Q
 from django.db.models.query import QuerySet
 from drf_spectacular.types import OpenApiTypes  # OpenApiTypes 임포트가 되어있는지 확인해주세요!
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
@@ -201,3 +201,69 @@ class AdminReviewListview(generics.ListAPIView[Review]):
         # 페이징이 적용되지 않은 경우 (page, size 파라미터가 없는 경우)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    tags=["[Admin] Review - 관리자 리뷰 관리"],
+    summary="관리자 리뷰 삭제",
+    description="review_id에 해당하는 리뷰 레코드를 시스템에서 삭제합니다. 관리자만 접근 가능합니다.",
+    responses={
+        status.HTTP_200_OK: OpenApiResponse(
+            description="리뷰 삭제 성공", response={"message": "리뷰가 성공적으로 삭제되었습니다."}
+        ),
+        status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+            description="유효성 검사 실패",
+            response={"error": "VALIDATION_ERROR", "message": "review_id는 정수여야 합니다."},
+        ),
+        status.HTTP_404_NOT_FOUND: OpenApiResponse(
+            description="리뷰를 찾을 수 없을 때",
+            response={"error": "NOT_FOUND", "message": "해당 ID의 리뷰를 찾을 수 없습니다."},
+        ),
+    },
+)
+class AdminReviewDeleteView(generics.DestroyAPIView[Review]):
+
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer  # 시리얼라이저는 필수 속성이므로 추가했습니다.
+    permission_classes = [AllowAny]
+    lookup_field = "review_id"
+
+    def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        try:
+            # URL 파라미터 유효성 검사
+            try:
+                review_id = int(self.kwargs.get(self.lookup_field))
+            except (ValueError, TypeError):
+                return Response(
+                    {"error": "VALIDATION_ERROR", "message": "review_id는 유효한 정수여야 합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # DRF의 기본 get_object() 메서드를 사용해 객체 가져오기
+            instance = self.get_object()
+
+            # 객체 삭제
+            self.perform_destroy(instance)
+
+            # 성공 응답
+            return Response(
+                {"message": "리뷰가 성공적으로 삭제되었습니다."},
+                status=status.HTTP_200_OK,
+            )
+
+        except self.queryset.model.DoesNotExist:
+            # get_object()에서 객체를 찾지 못했을 때의 예외 처리
+            return Response(
+                {"error": "NOT_FOUND", "message": "해당 ID의 리뷰를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        except Exception:
+            # 예상치 못한 기타 서버 오류 처리
+            return Response(
+                {
+                    "error": "INTERNAL_SERVER_ERROR",
+                    "message": "서버에 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

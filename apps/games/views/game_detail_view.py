@@ -44,4 +44,3 @@ class GameDetailView(APIView):
 
         serializer = GameDetailSerializer(game, context={"request": request})
         return Response(serializer.data)
-

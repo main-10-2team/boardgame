@@ -2,10 +2,10 @@ from typing import Optional
 
 from rest_framework import serializers
 
-from apps.games.models import Game, Like, Review, GameImage
+from apps.games.models import Game, GameImage, Like, Review
 
 
-class GameImageSerializer(serializers.ModelSerializer):
+class GameImageSerializer(serializers.ModelSerializer[GameImage]):
     class Meta:
         model = GameImage
         fields = ["game_des_img_url"]

@@ -29,7 +29,15 @@ class EmailLoginAPIView(APIView):
                             "message": "이메일 로그인에 성공했습니다.",
                             "access_token": "access.jwt.token",
                             "refresh_token": "refresh.jwt.token",
-                            "user": {"id": 1, "email": "test@example.com", "nickname": "tester"},
+                            "user": {
+                                "user_id": 1,
+                                "email": "test@example.com",
+                                "nickname": "tester",
+                                "phone_number": "+821012345678",
+                                "birth": "1970-01-01",
+                                "role": "admin",
+                                "status": 1,
+                            },
                         },
                     )
                 ],
@@ -58,7 +66,7 @@ class EmailLoginAPIView(APIView):
             ),
         },
         tags=["인증"],
-        summary="이메일 로그인 POST MAN 으로 테스트할것",
+        summary="이메일 로그인",
     )
     def post(self, request: Request) -> Response:
         print("📥 요청 데이터:", request.data)

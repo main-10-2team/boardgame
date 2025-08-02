@@ -9,6 +9,7 @@ from apps.users.views.auth.auth_logout_views import LogoutView
 from apps.users.views.auth.auth_signup_views import SignupView
 from apps.users.views.profile_views import UserProfileView
 
+from .views.auth.auth_find_id_views import FindIDAPIView
 from .views.preference_views import PreferenceSubmitView
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
     path("auth/verify-code/", VerifyEmailCodeView.as_view(), name="verify-email-code"),
     path("auth/login/", EmailLoginAPIView.as_view(), name="login"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
+    path("auth/find-id/", FindIDAPIView.as_view(), name="find-id"),
 ]

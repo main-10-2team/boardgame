@@ -17,7 +17,7 @@ class EmailSendCodeSerializer(Serializer[Any]):
 class EmailVerifyCodeSerializer(Serializer[Any]):
     email: EmailField = EmailField()
     verification_code: CharField = CharField()
-    purpose = serializers.ChoiceField(choices=["signup", "restore"])
+    purpose = serializers.ChoiceField(choices=["restore"])
 
     def validate(self, data: dict[str, Any]) -> dict[str, Any]:
         email = data["email"]

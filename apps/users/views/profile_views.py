@@ -8,12 +8,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.token_blacklist.models import (
+    BlacklistedToken,
+    OutstandingToken,
+)
 
 from apps.users.models import User
 from apps.users.serializers.profile_serializers import (
     PasswordChangeSerializer,
     UserProfileSerializer,
     UserProfileUpdateSerializer,
+    AccountDeleteSerializer,
 )
 
 
@@ -194,4 +200,73 @@ class PasswordChangeView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "비밀번호가 성공적으로 변경되었습니다."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    methods=["DELETE"],
+    summary="회원 탈퇴",
+    description="로그인한 사용자가 자신의 계정을 비밀번호 인증 후 탈퇴합니다.",
+    tags=["유저"],
+    request=AccountDeleteSerializer,
+    responses={
+        200: OpenApiResponse(
+            description="회원 탈퇴 성공",
+            response={
+                "type": "object",
+                "properties": {"message": {"type": "string", "example": "회원 탈퇴되었습니다."}},
+                "required": ["message"],
+            },
+        ),
+        400: OpenApiResponse(
+            description="비밀번호 불일치",
+            response={
+                "type": "object",
+                "properties": {
+                    "password": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "example": ["비밀번호가 일치하지 않습니다."],
+                    }
+                },
+                "required": ["password"],
+            },
+        ),
+        401: OpenApiResponse(
+            description="인증 실패 - 유효하지 않거나 누락된 토큰",
+            response={
+                "type": "object",
+                "properties": {"detail": {"type": "string", "example": "자격 인증 헤더가 제공되지 않았습니다."}},
+                "required": ["detail"],
+            },
+        ),
+        500: OpenApiResponse(
+            description="서버 내부 오류",
+            response={
+                "type": "object",
+                "properties": {"detail": {"type": "string", "example": "서버 내부 오류가 발생했습니다."}},
+                "required": ["detail"],
+            },
+        ),
+    },
+)
+class AccountDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(
+        self, request: Request, *args: Any, **kwargs: Any
+    ) -> Response:  # swagger에서 디버깅해볼때는 delete -> post
+        serializer = AccountDeleteSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            user = cast(User, request.user)
+
+            try:
+                tokens = OutstandingToken.objects.filter(user=user)
+                for token in tokens:
+                    BlacklistedToken.objects.get_or_create(token=token)
+            except TokenError:
+                pass
+
+            user.delete()
+            return Response({"message": "회원 탈퇴되었습니다."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

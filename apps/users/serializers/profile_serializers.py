@@ -185,3 +185,16 @@ class PasswordChangeSerializer(serializers.Serializer[Any]):
         user: User = self.context["request"].user
         user.set_password(self.validated_data["new_password"])
         user.save()
+
+
+class AccountDeleteSerializer(serializers.Serializer[Any]):
+    password = serializers.CharField()
+
+    class Meta:
+        ref_name = "AccountDelete"
+
+    def validate_password(self, value: str) -> str:
+        user: User = self.context["request"].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
+        return value

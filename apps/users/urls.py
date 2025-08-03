@@ -16,6 +16,7 @@ from apps.users.views.auth.auth_reset_password_views import (
 )
 from apps.users.views.auth.auth_signup_views import SignupView
 from apps.users.views.profile_views import UserProfileUpdateView, UserProfileView
+from apps.users.views.profile_views import PasswordChangeView, UserProfileView
 
 from .views.auth.auth_find_id_views import FindIDAPIView
 from .views.auth.auth_find_password_reset_views import PasswordResetVerifyAPIView
@@ -24,6 +25,7 @@ from .views.preference_views import PreferenceSubmitView
 urlpatterns = [
     path("profile/", UserProfileView.as_view(), name="user-profile"),
     path("profile/update/", UserProfileUpdateView.as_view(), name="user-profile-update"),
+    path("profile/password/", PasswordChangeView.as_view(), name="password-change"),
     path("preferences", PreferenceSubmitView.as_view(), name="preference-submit"),
     path("auth/signup/", SignupView.as_view(), name="signup"),
     path("auth/send-code/", SendEmailCodeView.as_view(), name="send-email-code"),

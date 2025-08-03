@@ -4,6 +4,9 @@ import uuid
 from typing import Any
 
 from django.core.files.uploadedfile import UploadedFile
+
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Count
 from django.utils.text import slugify
 from rest_framework import serializers
@@ -138,3 +141,43 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer[User]):
 
             logger.exception("유저 프로필 수정 중 오류 발생")
             raise serializers.ValidationError({"non_field_errors": [f"프로필 수정 중 오류가 발생했습니다: {str(e)}"]})
+
+
+class PasswordChangeSerializer(serializers.Serializer[Any]):
+    current_password = serializers.CharField()
+    new_password = serializers.CharField()
+    new_password_confirm = serializers.CharField()
+
+    def validate_current_password(self, value: str) -> str:
+        user: User = self.context["request"].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("현재 비밀번호가 일치하지 않습니다.")
+        return value
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        pw1 = attrs.get("new_password")
+        pw2 = attrs.get("new_password_confirm")
+        current_pw = attrs.get("current_password")
+
+        if pw1 != pw2:
+            raise serializers.ValidationError({"new_password_confirm": "비밀번호가 서로 일치하지 않습니다."})
+
+        if pw1 == current_pw:
+            raise serializers.ValidationError(
+                {"new_password": "현재 비밀번호와 동일한 비밀번호로는 변경할 수 없습니다."}
+            )
+
+        if not isinstance(pw1, str):
+            raise serializers.ValidationError({"new_password": "비밀번호는 문자열이어야 합니다."})
+
+        try:
+            validate_password(pw1, self.context["request"].user)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"new_password": e.messages})
+
+        return attrs
+
+    def save(self, **kwargs: Any) -> None:
+        user: User = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save()

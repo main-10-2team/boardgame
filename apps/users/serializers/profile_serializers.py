@@ -148,6 +148,9 @@ class PasswordChangeSerializer(serializers.Serializer[Any]):
     new_password = serializers.CharField()
     new_password_confirm = serializers.CharField()
 
+    class Meta:
+        ref_name = "PasswordChange"
+
     def validate_current_password(self, value: str) -> str:
         user: User = self.context["request"].user
         if not user.check_password(value):

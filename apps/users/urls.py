@@ -5,6 +5,10 @@ from apps.users.views.auth.auth_code_email_view import (
     VerifyEmailCodeView,
 )
 from apps.users.views.auth.auth_email_login_views import EmailLoginAPIView
+from apps.users.views.auth.auth_google_oauth_views import (
+    GoogleOAuthCallbackView,
+    GoogleOAuthLoginStartView,
+)
 from apps.users.views.auth.auth_logout_views import LogoutView
 from apps.users.views.auth.auth_reset_password_views import (
     ResetPasswordRequestCodeAPIView,
@@ -31,4 +35,6 @@ urlpatterns = [
         name="비밀번호 재설정 인증 코드 요청(비밀번호 찾기)",
     ),
     path("auth/reset-password/verify/", PasswordResetVerifyAPIView.as_view(), name="인증코드 입력 및 비밀번호 재설정"),
+    path("oauth/google/callback/", GoogleOAuthCallbackView.as_view(), name="google-login-callback"),
+    path("oauth/google/login/", GoogleOAuthLoginStartView.as_view(), name="google-login-start"),
 ]

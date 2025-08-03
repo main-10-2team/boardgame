@@ -26,6 +26,7 @@ dependencies = [
     "boto3 (>=1.39.15,<2.0.0)",
     "pillow (>=11.3.0,<12.0.0)",
     "drf-spectacular (>=0.28.0,<0.29.0)",
+    "drf-yasg (>=1.21.10,<2.0.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]

@@ -1,8 +1,12 @@
+from typing import Any, Optional, Dict
+
+from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Count
 from rest_framework import serializers
 
 from apps.games.models import Genre
 from apps.users.models import User
+from core.utils.s3_file_upload import S3Uploader
 
 
 class UserProfileSerializer(serializers.ModelSerializer[User]):
@@ -52,3 +56,46 @@ class UserProfileSerializer(serializers.ModelSerializer[User]):
             return []
 
         return [genre.name for genre in genre_qs]
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer[User]):
+    nickname = serializers.CharField(required=False)
+    phone_number = serializers.CharField(required=False)
+    profile_image = serializers.ImageField(required=False, allow_null=True)
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ["nickname", "phone_number", "profile_image", "password"]
+
+    def validate_password(self, value: str) -> str:
+        user: User = self.context["request"].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
+        return value
+
+    def validate_nickname(self, value: str) -> str:
+        user: User = self.context["request"].user
+        if User.objects.exclude(pk=user.pk).filter(nickname=value).exists():
+            raise serializers.ValidationError("이미 사용 중인 닉네임입니다.")
+        return value
+
+    def update(self, instance: User, validated_data: dict) -> User:
+        validated_data.pop("password", None)
+
+        if "nickname" in validated_data:
+            instance.nickname = validated_data["nickname"]
+
+        if "phone_number" in validated_data:
+            instance.phone_number = validated_data["phone_number"]
+
+        if "profile_image" in self.context["request"].FILES:
+            profile_image: Optional[UploadedFile] = self.context["request"].FILES["profile_image"]
+            s3_key = f"profiles/{instance.user_id}/{profile_image.name}"
+            uploader = S3Uploader()
+            uploaded_url = uploader.upload_file(profile_image, s3_key)
+            if uploaded_url:
+                instance.profile_image = uploaded_url
+
+        instance.save()
+        return instance

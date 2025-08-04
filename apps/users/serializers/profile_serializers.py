@@ -1,4 +1,6 @@
-from typing import Any, Optional, Dict
+import logging
+import uuid
+from typing import Any
 
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Count
@@ -7,6 +9,8 @@ from rest_framework import serializers
 from apps.games.models import Genre
 from apps.users.models import User
 from core.utils.s3_file_upload import S3Uploader
+
+logger = logging.getLogger(__name__)
 
 
 class UserProfileSerializer(serializers.ModelSerializer[User]):
@@ -62,17 +66,10 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer[User]):
     nickname = serializers.CharField(required=False)
     phone_number = serializers.CharField(required=False)
     profile_image = serializers.ImageField(required=False, allow_null=True)
-    password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ["nickname", "phone_number", "profile_image", "password"]
-
-    def validate_password(self, value: str) -> str:
-        user: User = self.context["request"].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
-        return value
+        fields = ["nickname", "phone_number", "profile_image"]
 
     def validate_nickname(self, value: str) -> str:
         user: User = self.context["request"].user
@@ -80,22 +77,39 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer[User]):
             raise serializers.ValidationError("이미 사용 중인 닉네임입니다.")
         return value
 
-    def update(self, instance: User, validated_data: dict) -> User:
-        validated_data.pop("password", None)
+    def update(self, instance: User, validated_data: dict[str, Any]) -> User:
+        uploader = S3Uploader()
+        uploaded_s3_key = None
 
-        if "nickname" in validated_data:
-            instance.nickname = validated_data["nickname"]
+        try:
+            if "nickname" in validated_data:
+                instance.nickname = validated_data["nickname"]
 
-        if "phone_number" in validated_data:
-            instance.phone_number = validated_data["phone_number"]
+            if "phone_number" in validated_data:
+                instance.phone_number = validated_data["phone_number"]
 
-        if "profile_image" in self.context["request"].FILES:
-            profile_image: Optional[UploadedFile] = self.context["request"].FILES["profile_image"]
-            s3_key = f"profiles/{instance.user_id}/{profile_image.name}"
-            uploader = S3Uploader()
-            uploaded_url = uploader.upload_file(profile_image, s3_key)
-            if uploaded_url:
-                instance.profile_image = uploaded_url
+            if "profile_image" in self.context["request"].FILES:
+                profile_image: UploadedFile = self.context["request"].FILES["profile_image"]
+                unique_name = f"{uuid.uuid4().hex[:6]}_{profile_image.name}"
+                s3_key = f"profile_images/{uuid.uuid4()}_{unique_name}"
 
-        instance.save()
-        return instance
+                uploaded_url = uploader.upload_file(profile_image, s3_key)
+                if not uploaded_url:
+                    raise serializers.ValidationError("프로필 이미지 업로드에 실패했습니다.")
+
+                uploaded_s3_key = s3_key
+                instance.profile_image = s3_key
+
+            instance.save()
+            return instance
+
+        except Exception as e:
+            if uploaded_s3_key:
+                try:
+                    uploader.delete_file(uploaded_s3_key)
+                    logger.info(f"S3 롤백 성공: {uploaded_s3_key}")
+                except Exception as delete_err:
+                    logger.error(f"S3 롤백 실패: {uploaded_s3_key}, 오류: {delete_err}")
+
+            logger.exception("유저 프로필 수정 중 오류 발생")
+            raise serializers.ValidationError({"non_field_errors": [f"프로필 수정 중 오류가 발생했습니다: {e}"]})

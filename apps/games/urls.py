@@ -15,5 +15,6 @@ urlpatterns = [
     path("games/filter", GameFilterView.as_view(), name="game-filter"),
     path("games/<int:game_id>", GameDetailView.as_view(), name="game-detail"),
     path("admin/reviews/", AdminReviewListview.as_view(), name="admin-review-list"),
-    path("admin/reviews/<int:review_id>/", AdminReviewDeleteView.as_view(), name="admin_review_delete"),
+    path('users/<int:user_id>/', UserInfoRetrieveView.as_view(), name='user-info'),
+
 ]

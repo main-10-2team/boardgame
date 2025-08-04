@@ -15,7 +15,7 @@ from apps.users.views.auth.auth_reset_password_views import (
 )
 from apps.users.views.auth.auth_signup_views import SignupView
 from apps.users.views.profile_views import UserProfileView
-
+from apps.users.views.admin_user_list_view import UserInfoRetrieveView
 from .views.auth.auth_find_id_views import FindIDAPIView
 from .views.auth.auth_find_password_reset_views import PasswordResetVerifyAPIView
 from .views.preference_views import PreferenceSubmitView
@@ -37,4 +37,6 @@ urlpatterns = [
     path("auth/reset-password/verify/", PasswordResetVerifyAPIView.as_view(), name="인증코드 입력 및 비밀번호 재설정"),
     path("oauth/google/callback/", GoogleOAuthCallbackView.as_view(), name="google-login-callback"),
     path("oauth/google/login/", GoogleOAuthLoginStartView.as_view(), name="google-login-start"),
+    path("admin/<int:user_id>/", UserInfoRetrieveView.as_view(), name="user-info"),
+
 ]

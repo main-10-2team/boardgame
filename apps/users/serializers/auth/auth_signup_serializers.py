@@ -1,18 +1,28 @@
+import logging
 import os  # 파일 확장자를 얻기 위해 os 모듈 임포트
 import re
-
-# S3 파일 업로드를 위한 임포트
 import uuid
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 from django.contrib.auth.hashers import make_password
-from drf_spectacular.types import OpenApiTypes
+from django.utils.text import slugify
 from rest_framework import serializers
+from unidecode import unidecode
 
 from apps.games.models import Genre, PlaytimeCategory
 from apps.users.models import User, UserPreferenceGenre, UserPreferencePlaytime
-from core.utils.s3_file_upload import S3Uploader  # S3Uploader 클래스 임포트
+from core.utils.s3_file_upload import S3Uploader
+
+logger = logging.getLogger(__name__)
+
+
+def korean_slugify(text: str) -> str:
+    """
+    한글을 포함한 텍스트를 URL 친화적인 slug로 변환합니다.
+    """
+    ascii_text = unidecode(text)
+    return slugify(ascii_text) or "user"
 
 
 class SignupSerializer(serializers.Serializer):  # type: ignore
@@ -82,7 +92,6 @@ class SignupSerializer(serializers.Serializer):  # type: ignore
             return []
 
         requested_playtime_ids: Set[int] = set(value)
-        # 이 부분이 핵심입니다: PlaytimeCategory.objects.get(...) 대신 filter(playtime_id__in=...) 사용
         playtimes = list(PlaytimeCategory.objects.filter(playtime_id__in=requested_playtime_ids))
         valid_playtime_ids: Set[int] = {p.playtime_id for p in playtimes}
 
@@ -93,13 +102,8 @@ class SignupSerializer(serializers.Serializer):  # type: ignore
 
     def create(self, validated_data: Dict[str, Any]) -> User:
         email_verification_code = validated_data.pop("email_verification_code")
-        preferred_genres = validated_data.pop(
-            "preferred_genres", []
-        )  # 기본값 [] 추가 (validated_data에 없을 수도 있으므로)
-        # preferred_playtime이 이제 PlaytimeCategory 객체들의 리스트입니다. 변수명을 더 명확하게 변경합니다.
-        preferred_playtime_objects = validated_data.pop(
-            "preferred_playtime", []
-        )  # 기본값 [] 추가 및 변수명 변경 (객체 리스트임을 명시)
+        preferred_genres = validated_data.pop("preferred_genres", [])
+        preferred_playtime_objects = validated_data.pop("preferred_playtime", [])
         profile_img_file = validated_data.pop("profile_img_file", None)
         validated_data["password"] = make_password(validated_data["password"])
         validated_data["role"] = "user"
@@ -107,43 +111,61 @@ class SignupSerializer(serializers.Serializer):  # type: ignore
         validated_data["created_at"] = datetime.now()
         validated_data["updated_at"] = datetime.now()
 
-        # 사용자 생성
-        user = User.objects.create(**validated_data)
+        s3_uploader = S3Uploader()
+        uploaded_s3_key = None  # 롤백을 위한 S3 키 변수 초기화
+        user = None
 
-        # 프로필 이미지 파일 처리 (S3Uploader 사용)
-        if profile_img_file:
-            s3_uploader = S3Uploader()
-            file_extension = os.path.splitext(profile_img_file.name)[1]
-            s3_key = f"profile_images/{uuid.uuid4()}{file_extension}"
-            profile_image_url = s3_uploader.upload_file(file_obj=profile_img_file, s3_key=s3_key)
+        try:
+            # 사용자 생성 (profile_image는 아직 할당하지 않음)
+            user = User.objects.create(**validated_data)
 
-            if profile_image_url:
-                user.profile_image = profile_image_url
-                user.save(update_fields=["profile_image"])
-            else:
-                import logging
+            # 프로필 이미지 파일 처리 (닉네임 기반 파일명 생성)
+            if profile_img_file:
+                nickname_slug = korean_slugify(validated_data.get("nickname", "anonymous"))
+                file_extension = os.path.splitext(profile_img_file.name)[1] or ".jpg"
+                unique_name = f"{uuid.uuid4().hex[:6]}_{nickname_slug}{file_extension}"
+                s3_key = f"profile_images/{unique_name}"
 
-                logger = logging.getLogger(__name__)
-                logger.error(f"S3 프로필 이미지 업로드 실패: {profile_img_file.name}")
-                # S3 업로드 실패 시 사용자 롤백 (선택 사항)
-                # user.delete()
-                # raise serializers.ValidationError({"detail": "프로필 이미지 업로드에 실패했습니다."})
+                profile_image_url = s3_uploader.upload_file(file_obj=profile_img_file, s3_key=s3_key)
 
-        if preferred_genres:
-            # 여러 개의 UserPreferenceGenre 객체를 한 번에 생성합니다.
-            user_preference_genres = [
-                UserPreferenceGenre(user=user, genre=genre_obj, created_at=datetime.now())
-                for genre_obj in preferred_genres
-            ]
-            UserPreferenceGenre.objects.bulk_create(user_preference_genres)
+                if profile_image_url:
+                    user.profile_image = s3_key  # S3 Key를 저장합니다.
+                    user.save(update_fields=["profile_image"])
+                    uploaded_s3_key = s3_key  # 롤백을 위해 S3 키 저장
+                else:
+                    logger.error(f"S3 프로필 이미지 업로드 실패: {profile_img_file.name}")
+                    raise serializers.ValidationError({"detail": "프로필 이미지 업로드에 실패했습니다."})
 
-        # 이 부분이 수정되어야 합니다.
-        if preferred_playtime_objects:  # preferred_playtime_objects는 PlaytimeCategory 객체들의 리스트입니다.
-            # 각 PlaytimeCategory 객체에 대해 UserPreferencePlaytime 객체를 생성하고 bulk_create를 사용합니다.
-            user_preference_playtimes = [
-                UserPreferencePlaytime(user=user, playtime_category=playtime_obj, created_at=datetime.now())
-                for playtime_obj in preferred_playtime_objects
-            ]
-            UserPreferencePlaytime.objects.bulk_create(user_preference_playtimes)  #
+            if preferred_genres:
+                user_preference_genres = [
+                    UserPreferenceGenre(user=user, genre=genre_obj, created_at=datetime.now())
+                    for genre_obj in preferred_genres
+                ]
+                UserPreferenceGenre.objects.bulk_create(user_preference_genres)
 
-        return user
+            if preferred_playtime_objects:
+                user_preference_playtimes = [
+                    UserPreferencePlaytime(user=user, playtime_category=playtime_obj, created_at=datetime.now())
+                    for playtime_obj in preferred_playtime_objects
+                ]
+                UserPreferencePlaytime.objects.bulk_create(user_preference_playtimes)
+
+            return user
+
+        except Exception as e:
+            # 예외 발생 시 업로드된 S3 파일 롤백
+            if uploaded_s3_key:
+                try:
+                    s3_uploader.delete_file(uploaded_s3_key)
+                    logger.info(f"S3 롤백 성공: {uploaded_s3_key}")
+                except Exception as delete_err:
+                    logger.error(f"S3 롤백 실패: {uploaded_s3_key}, 오류: {delete_err}")
+
+            # 이미 생성된 user 객체가 있다면 삭제하여 롤백
+            if user and user.pk:
+                user.delete()
+                logger.info(f"유저 롤백 성공: {user.email}")
+
+            # 기존 오류를 다시 발생시킵니다.
+            logger.exception("회원가입 처리 중 오류 발생")
+            raise serializers.ValidationError({"non_field_errors": [f"회원가입 처리 중 오류가 발생했습니다: {str(e)}"]})

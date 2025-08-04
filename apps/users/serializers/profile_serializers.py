@@ -90,15 +90,20 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer[User]):
 
             if "profile_image" in self.context["request"].FILES:
                 profile_image: UploadedFile = self.context["request"].FILES["profile_image"]
-                unique_name = f"{uuid.uuid4().hex[:6]}_{profile_image.name}"
-                s3_key = f"profile_images/{uuid.uuid4()}_{unique_name}"
-
-                uploaded_url = uploader.upload_file(profile_image, s3_key)
-                if not uploaded_url:
-                    raise serializers.ValidationError("프로필 이미지 업로드에 실패했습니다.")
-
-                uploaded_s3_key = s3_key
-                instance.profile_image = s3_key
+                if instance.profile_image:
+                    existing_key = str(instance.profile_image)
+                    updated_key = uploader.update_file(profile_image, existing_key)
+                    if not updated_key:
+                        raise serializers.ValidationError("프로필 이미지 업데이트에 실패했습니다.")
+                    uploaded_s3_key = existing_key
+                else:
+                    unique_name = f"{uuid.uuid4().hex[:6]}_{profile_image.name}"
+                    s3_key = f"profile_images/{uuid.uuid4()}_{unique_name}"
+                    uploaded_url = uploader.upload_file(profile_image, s3_key)
+                    if not uploaded_url:
+                        raise serializers.ValidationError("프로필 이미지 업로드에 실패했습니다.")
+                    uploaded_s3_key = s3_key
+                    instance.profile_image = s3_key
 
             instance.save()
             return instance

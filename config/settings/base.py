@@ -189,7 +189,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Boardq 의 웹 사이트 개발을 위한 API입니다.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    "COMPONENT_SPLIT_REQUEST": False,
+    "COMPONENT_SPLIT_REQUEST": True,
     "SWAGGER_UI_SETTINGS": {
         "dom_id": "#swagger-ui",
         "layout": "BaseLayout",
@@ -227,3 +227,9 @@ NCP_SECRET_ACCESS_KEY = os.getenv("NCP_SECRET_ACCESS_KEY")
 NCP_REGION = os.getenv("NCP_REGION", "kr-standard")  # 한국 리전 기본값
 NCP_STORAGE_BUCKET_NAME = os.getenv("NCP_STORAGE_BUCKET_NAME")
 NCP_ENDPOINT_URL = os.getenv("NCP_ENDPOINT_URL", "https://kr.object.ncloudstorage.com")
+
+# 구글 소셜 로그인
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
+APP_FRONTEND_URL = os.getenv("APP_FRONTEND_URL", "http://localhost:3000")

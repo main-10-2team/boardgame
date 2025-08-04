@@ -112,6 +112,7 @@ class SignupView(APIView):
                 value={
                     "email": "user@example.com",
                     "password": "SecurePass123!",
+                    "name": "이름",
                     "nickname": "GameLover",
                     "phone_number": "+821012345678",
                     "birth": "1990-01-01",
@@ -131,6 +132,7 @@ class SignupView(APIView):
                     "user": {
                         "user_id": 1,
                         "email": "user@example.com",
+                        "name": "이름",
                         "nickname": "GameLover",
                         "phone_number": "+821012345678",
                         "birth": "1990-01-01T00:00:00Z",

@@ -28,6 +28,7 @@ def korean_slugify(text: str) -> str:
 class SignupSerializer(serializers.Serializer):  # type: ignore
     email = serializers.EmailField(max_length=255, required=True)
     password = serializers.CharField(min_length=8, write_only=True, required=True)
+    name = serializers.CharField(max_length=10, required=True)
     nickname = serializers.CharField(min_length=2, max_length=20, required=True)
     phone_number = serializers.CharField(max_length=20, required=True)
     birth = serializers.DateField(required=True)

@@ -69,38 +69,6 @@ class SignupSerializer(serializers.Serializer):  # type: ignore
             raise serializers.ValidationError("invalid_birth")
         return value
 
-    def validate_preferred_genres(self, value: List[int]) -> List[Genre]:
-        """
-        선호 장르 ID 목록을 받아 유효성을 검사하고, 해당 Genre 객체 목록을 반환합니다.
-        """
-        if not value:
-            return []
-
-        requested_genre_ids: Set[int] = set(value)
-        genres = list(Genre.objects.filter(genre_id__in=requested_genre_ids))
-        valid_genre_ids: Set[int] = {genre.genre_id for genre in genres}
-
-        if requested_genre_ids != valid_genre_ids:
-            invalid_ids = requested_genre_ids - valid_genre_ids
-            raise serializers.ValidationError(f"invalid_genre_id: {', '.join(map(str, invalid_ids))}")
-        return genres
-
-    def validate_preferred_playtime(self, value: List[int]) -> List[PlaytimeCategory]:
-        """
-        선호 플레이 시간 ID를 받아 유효성을 검사하고, 해당 PlaytimeCategory 객체를 반환합니다.
-        """
-        if not value:  # 리스트가 비어있으면 빈 리스트 반환
-            return []
-
-        requested_playtime_ids: Set[int] = set(value)
-        playtimes = list(PlaytimeCategory.objects.filter(playtime_id__in=requested_playtime_ids))
-        valid_playtime_ids: Set[int] = {p.playtime_id for p in playtimes}
-
-        if requested_playtime_ids != valid_playtime_ids:
-            invalid_ids = requested_playtime_ids - valid_playtime_ids
-            raise serializers.ValidationError(f"invalid_playtime_id: {', '.join(map(str, invalid_ids))}")
-        return playtimes  # PlaytimeCategory 객체들의 리스트를 반환
-
     def create(self, validated_data: Dict[str, Any]) -> User:
         email_verification_code = validated_data.pop("email_verification_code")
         preferred_genres = validated_data.pop("preferred_genres", [])

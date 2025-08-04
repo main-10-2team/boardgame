@@ -118,8 +118,6 @@ class SignupView(APIView):
                     "birth": "1990-01-01",
                     "profile_img_file": "binary",
                     "email_verification_code": "123456",  # 다시 포함
-                    "preferred_genres": [1, 2],
-                    "preferred_playtime": [3, 4],
                 },
                 request_only=True,
                 media_type="multipart/form-data",
@@ -142,8 +140,6 @@ class SignupView(APIView):
                         "updated_at": "2025-07-29T14:42:00Z",
                     },
                     "profile_img_url": "https://storage.example.com/profile/asdd.png",
-                    "preferred_genres": ["Strategy", "Family"],
-                    "preferred_playtime": ["30-60min", "60-90min"],
                     "access_token": "...",
                     "refresh_token": "...",
                 },
@@ -207,8 +203,6 @@ class SignupView(APIView):
                     "updated_at": user.updated_at.isoformat(),
                 },
                 "profile_img_url": user.profile_image if user.profile_image else None,
-                "preferred_genres": [genre.genre.name for genre in user.user_preferred_genres.all()],
-                "preferred_playtime": preferred_playtime_names,
                 "access_token": str(refresh.access_token),
                 "refresh_token": str(refresh),
             }

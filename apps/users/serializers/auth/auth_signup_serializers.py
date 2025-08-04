@@ -36,10 +36,7 @@ class SignupSerializer(serializers.Serializer):  # type: ignore
         required=False, allow_null=True, write_only=True, help_text="업로드할 이미지 파일 (JPG/PNG 등)"
     )
     email_verification_code = serializers.CharField(max_length=6, min_length=6, required=True)
-    preferred_genres = serializers.ListField(child=serializers.IntegerField(), required=False, default=[])  # ID로 받음
-    preferred_playtime = serializers.ListField(
-        child=serializers.IntegerField(), required=False, default=[]
-    )  # ID로 받음
+     # ID로 받음
 
     def validate_email(self, value: str) -> str:
         email_regex = r"^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$"

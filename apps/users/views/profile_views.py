@@ -1,7 +1,5 @@
 import logging
-from typing import cast
-
-from typing import Any
+from typing import Any, cast
 
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
@@ -13,9 +11,9 @@ from rest_framework.views import APIView
 
 from apps.users.models import User
 from apps.users.serializers.profile_serializers import (
+    PasswordChangeSerializer,
     UserProfileSerializer,
     UserProfileUpdateSerializer,
-    PasswordChangeSerializer,
 )
 
 

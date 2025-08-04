@@ -1,8 +1,24 @@
+import logging
+import os
+import uuid
+from typing import Any
+
+from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Count
+from django.utils.text import slugify
 from rest_framework import serializers
+from unidecode import unidecode
 
 from apps.games.models import Genre
 from apps.users.models import User
+from core.utils.s3_file_upload import S3Uploader
+
+logger = logging.getLogger(__name__)
+
+
+def korean_slugify(text: str) -> str:
+    ascii_text = unidecode(text)
+    return slugify(ascii_text) or "user"
 
 
 class UserProfileSerializer(serializers.ModelSerializer[User]):
@@ -52,3 +68,73 @@ class UserProfileSerializer(serializers.ModelSerializer[User]):
             return []
 
         return [genre.name for genre in genre_qs]
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer[User]):
+    nickname = serializers.CharField(required=False)
+    phone_number = serializers.CharField(required=False)
+    profile_image = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = ["nickname", "phone_number", "profile_image"]
+
+    def validate_nickname(self, value: str) -> str:
+        user: User = self.context["request"].user
+        if User.objects.exclude(pk=user.pk).filter(nickname=value).exists():
+            raise serializers.ValidationError("이미 사용 중인 닉네임입니다.")
+        return value
+
+    def update(self, instance: User, validated_data: dict[str, Any]) -> User:
+        uploader = S3Uploader()
+        uploaded_s3_key = None
+
+        try:
+            if "nickname" in validated_data:
+                instance.nickname = validated_data["nickname"]
+
+            if "phone_number" in validated_data:
+                instance.phone_number = validated_data["phone_number"]
+
+            if "profile_image" in self.context["request"].FILES:
+                profile_image: UploadedFile = self.context["request"].FILES["profile_image"]
+                if instance.profile_image:
+                    existing_key = str(instance.profile_image)
+                    base_url = f"{uploader.client.meta.endpoint_url}/{uploader.bucket}"
+                    existing_url = f"{base_url}/{existing_key}"
+                    updated_url = uploader.update_file(profile_image, existing_url)
+                    if not updated_url:
+                        raise serializers.ValidationError(
+                            {"non_field_errors": ["프로필 이미지 업로드에 실패했습니다."]}
+                        )
+                    uploaded_s3_key = updated_url
+                    instance.profile_image = existing_key
+                else:
+                    nickname = korean_slugify(instance.nickname or "anonymous")
+                    extension = os.path.splitext(profile_image.name or "default.jpg")[1] or ".jpg"
+                    unique_name = f"{uuid.uuid4().hex[:6]}_{nickname}{extension}"
+                    s3_key = f"profile_images/{unique_name}"
+                    uploaded_url = uploader.upload_file(profile_image, s3_key)
+                    if not uploaded_url:
+                        raise serializers.ValidationError(
+                            {"non_field_errors": ["프로필 이미지 업로드에 실패했습니다."]}
+                        )
+                    uploaded_s3_key = s3_key
+                    instance.profile_image = s3_key
+
+            instance.save()
+            return instance
+
+        except serializers.ValidationError as ve:
+            raise ve
+
+        except Exception as e:
+            if uploaded_s3_key:
+                try:
+                    uploader.delete_file(uploaded_s3_key)
+                    logger.info(f"S3 롤백 성공: {uploaded_s3_key}")
+                except Exception as delete_err:
+                    logger.error(f"S3 롤백 실패: {uploaded_s3_key}, 오류: {delete_err}")
+
+            logger.exception("유저 프로필 수정 중 오류 발생")
+            raise serializers.ValidationError({"non_field_errors": [f"프로필 수정 중 오류가 발생했습니다: {str(e)}"]})

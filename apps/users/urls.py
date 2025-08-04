@@ -41,5 +41,4 @@ urlpatterns = [
     path("admin/<int:user_id>/", UserInfoRetrieveView.as_view(), name="user-info"),
     path("admin/<int:user_id>/", UserInfoRetrieveView.as_view(), name="admin-user-info"),
 
-
 ]

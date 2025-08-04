@@ -36,7 +36,7 @@ class S3Uploader:
                 file_obj,
                 self.bucket,
                 s3_key,
-                ExtraArgs={"ContentType": file_obj.content_type},
+                ExtraArgs={"ContentType": file_obj.content_type, "ACL": "public-read"},
             )
             # URL 생성 시 NCP 엔드포인트 사용
             return f"{settings.NCP_ENDPOINT_URL}/{self.bucket}/{s3_key}"
@@ -88,7 +88,7 @@ class S3Uploader:
                 file_obj,
                 self.bucket,
                 s3_key,
-                ExtraArgs={"ContentType": file_obj.content_type},
+                ExtraArgs={"ContentType": file_obj.content_type, "ACL": "public-read"},
             )
             return s3_url  # Key는 같으니 기존 URL 반환
         except Exception as e:

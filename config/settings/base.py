@@ -37,7 +37,6 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "django_filters",
     "rest_framework_simplejwt.token_blacklist",
-    "drf_yasg",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS

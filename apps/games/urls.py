@@ -15,7 +15,7 @@ urlpatterns = [
     path("games/search", GameSearchView.as_view(), name="game-search"),
     path("games/filter", GameFilterView.as_view(), name="game-filter"),
     path("games/<int:game_id>", GameDetailView.as_view(), name="game-detail"),
+    path("games/<int:game_id>/reviews", GameReviewListView.as_view(), name="game-review-list"),
     path("admin/reviews/", AdminReviewListview.as_view(), name="admin-review-list"),
     path("admin/reviews/<int:review_id>/", AdminReviewDeleteView.as_view(), name="admin_review_delete"),
-    path("games/<int:game_id>/reviews", GameReviewListView.as_view(), name="game-review-list"),
 ]

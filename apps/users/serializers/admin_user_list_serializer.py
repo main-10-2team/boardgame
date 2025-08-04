@@ -1,16 +1,17 @@
 from rest_framework import serializers
+from typing import TypeAlias
+from django.db.models import Model  # 이 부분을 추가해야 합니다.
 from apps.users.models import User
 
-
+# Mypy가 User 모델을 인지할 수 있도록 생성
 # 관리자 회원 정보 조회
-class UserSerializer(serializers.ModelSerializer):
-
+class UserSerializer(serializers.ModelSerializer[User]):
 
     # API 명세서의 "id" 필드는 User 모델의 "user_id"에 해당합니다.
-    id = serializers.IntegerField(source='user_id', read_only=True)
+    id = serializers.IntegerField(source="user_id", read_only=True)
 
     # API 명세서의 "username" 필드는 User 모델의 "nickname"에 해당합니다.
-    username = serializers.CharField(source='nickname', read_only=True)
+    username = serializers.CharField(source="nickname", read_only=True)
 
     email = serializers.EmailField(read_only=True)
 
@@ -20,8 +21,6 @@ class UserSerializer(serializers.ModelSerializer):
     last_login = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M:%S")
 
     class Meta:
+
         model = User
-        fields = ('id', 'username', 'email', 'created_at', 'last_login')
-
-
-
+        fields = ("id", "username", "email", "created_at", "last_login")

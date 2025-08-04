@@ -1,10 +1,13 @@
-from django.http import Http404
-from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+# apps/users/views/admin_user_list_view.py
+
 from drf_spectacular.utils import extend_schema
-from apps.users.models import User
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+from django.http import Http404
+from typing import Any
+from apps.users.models import User # 이미 임포트된 User 모델을 사용합니다.
 from apps.users.serializers.admin_user_list_serializer import UserSerializer
 
 
@@ -13,18 +16,18 @@ from apps.users.serializers.admin_user_list_serializer import UserSerializer
     summary="관리자 회원 정보 조회",
     description="지정된 `user_id`에 해당하는 회원의 상세 정보를 조회합니다. 본인 또는 관리자만 접근 가능합니다.",
 )
-class UserInfoRetrieveView(generics.RetrieveAPIView):
+class UserInfoRetrieveView(generics.RetrieveAPIView[User]):
     # 지정된 user_id에 해당하는 회원의 상세 정보를 조회하는 API 뷰입니다.
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'user_id'
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request: Request, *args: list[Any], **kwargs: dict[str, Any]) -> Response:
         try:
             instance = self.get_object()
 
-            if not request.user.is_staff and request.user != instance:
+            if hasattr(request.user, "is_staff") and not request.user.is_staff and request.user != instance:
                 return Response(
                     {"error": "FORBIDDEN", "message": "다른 회원의 정보를 조회할 권한이 없습니다."},
                     status=status.HTTP_403_FORBIDDEN
@@ -43,5 +46,3 @@ class UserInfoRetrieveView(generics.RetrieveAPIView):
                 {"error": "INTERNAL_SERVER_ERROR", "message": "서버에 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-

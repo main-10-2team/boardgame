@@ -18,19 +18,17 @@ from apps.users.serializers.admin_user_manage_serializers import (
     summary="관리자 회원 정보 조회",
     description="지정된 `user_id`에 해당하는 회원의 상세 정보를 조회합니다. 본인 또는 관리자만 접근 가능합니다.",
 )
-class UserInfoRetrieveView(generics.RetrieveAPIView[User]):
+class AdminUserDetailView(generics.RetrieveAPIView[User]):
     queryset = User.objects.all()
     serializer_class = AdminUserdetailSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "user_id"
 
-    # ... (기존 코드) ...
-
     def retrieve(self, request: Request, *args: list[Any], **kwargs: dict[str, Any]) -> Response:
         try:
             instance = self.get_object()
 
-            # 로그인된 사용자이고, 본인 정보가 아닐 때 접근을 거부합니다.
+            # 관리자가 아닐 때 오류 메시지
             if request.user.is_authenticated and not request.user.is_staff and request.user.id != instance.id:  # type: ignore
                 return Response(
                     {"error": "FORBIDDEN", "message": "다른 회원의 정보를 조회할 권한이 없습니다."},

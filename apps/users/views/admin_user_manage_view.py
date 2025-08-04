@@ -1,14 +1,16 @@
+from typing import Any
+
+from django.http import Http404
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from django.http import Http404
-from typing import Any
 
 from apps.users.models import User
-from apps.users.serializers.admin_user_manage_serializers import AdminUserdetailSerializer
-
+from apps.users.serializers.admin_user_manage_serializers import (
+    AdminUserdetailSerializer,
+)
 
 
 @extend_schema(

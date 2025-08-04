@@ -40,5 +40,4 @@ urlpatterns = [
     path("oauth/google/login/", GoogleOAuthLoginStartView.as_view(), name="google-login-start"),
     path("admin/<int:user_id>/", UserInfoRetrieveView.as_view(), name="user-info"),
     path("admin/<int:user_id>/", UserInfoRetrieveView.as_view(), name="admin-user-info"),
-
 ]

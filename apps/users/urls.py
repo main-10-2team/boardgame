@@ -15,8 +15,7 @@ from apps.users.views.auth.auth_reset_password_views import (
     ResetPasswordRequestCodeAPIView,
 )
 from apps.users.views.auth.auth_signup_views import SignupView
-from apps.users.views.profile_views import UserProfileUpdateView, UserProfileView
-from apps.users.views.profile_views import PasswordChangeView, UserProfileView
+from apps.users.views.profile_views import UserProfileUpdateView, UserProfileView, PasswordChangeView
 
 from .views.auth.auth_find_id_views import FindIDAPIView
 from .views.auth.auth_find_password_reset_views import PasswordResetVerifyAPIView

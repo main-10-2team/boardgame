@@ -37,6 +37,8 @@ class UserProfileSerializer(serializers.ModelSerializer[User]):
             "email",
             "nickname",
             "profile_image",
+            "phone_number",
+            "birth",
             "review_count",
             "like_count",
             "created_at",

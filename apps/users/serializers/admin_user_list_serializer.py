@@ -1,7 +1,10 @@
-from rest_framework import serializers
 from typing import TypeAlias
+
 from django.db.models import Model  # 이 부분을 추가해야 합니다.
+from rest_framework import serializers
+
 from apps.users.models import User
+
 
 # Mypy가 User 모델을 인지할 수 있도록 생성
 # 관리자 회원 정보 조회

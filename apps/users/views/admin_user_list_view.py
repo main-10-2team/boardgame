@@ -1,13 +1,15 @@
 # apps/users/views/admin_user_list_view.py
 
+from typing import Any
+
+from django.http import Http404
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from django.http import Http404
-from typing import Any
-from apps.users.models import User # 이미 임포트된 User 모델을 사용합니다.
+
+from apps.users.models import User  # 이미 임포트된 User 모델을 사용합니다.
 from apps.users.serializers.admin_user_list_serializer import UserSerializer
 
 
@@ -21,7 +23,7 @@ class UserInfoRetrieveView(generics.RetrieveAPIView[User]):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
-    lookup_field = 'user_id'
+    lookup_field = "user_id"
 
     def retrieve(self, request: Request, *args: list[Any], **kwargs: dict[str, Any]) -> Response:
         try:
@@ -30,7 +32,7 @@ class UserInfoRetrieveView(generics.RetrieveAPIView[User]):
             if hasattr(request.user, "is_staff") and not request.user.is_staff and request.user != instance:
                 return Response(
                     {"error": "FORBIDDEN", "message": "다른 회원의 정보를 조회할 권한이 없습니다."},
-                    status=status.HTTP_403_FORBIDDEN
+                    status=status.HTTP_403_FORBIDDEN,
                 )
 
             serializer = self.get_serializer(instance)
@@ -39,10 +41,13 @@ class UserInfoRetrieveView(generics.RetrieveAPIView[User]):
         except (Http404, ValueError):
             return Response(
                 {"error": "NOT_FOUND", "message": "해당 ID의 회원을 찾을 수 없습니다."},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
             return Response(
-                {"error": "INTERNAL_SERVER_ERROR", "message": "서버에 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {
+                    "error": "INTERNAL_SERVER_ERROR",
+                    "message": "서버에 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

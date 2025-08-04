@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.users.views.admin_user_list_view import UserInfoRetrieveView
 from apps.users.views.auth.auth_code_email_view import (
     SendEmailCodeView,
     VerifyEmailCodeView,
@@ -15,7 +16,7 @@ from apps.users.views.auth.auth_reset_password_views import (
 )
 from apps.users.views.auth.auth_signup_views import SignupView
 from apps.users.views.profile_views import UserProfileView
-from apps.users.views.admin_user_list_view import UserInfoRetrieveView
+
 from .views.auth.auth_find_id_views import FindIDAPIView
 from .views.auth.auth_find_password_reset_views import PasswordResetVerifyAPIView
 from .views.preference_views import PreferenceSubmitView

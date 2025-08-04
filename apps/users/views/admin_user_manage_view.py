@@ -1,5 +1,3 @@
-# apps/users/views/admin_user_list_view.py
-
 from typing import Any
 
 from django.http import Http404
@@ -9,8 +7,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from apps.users.models import User  # 이미 임포트된 User 모델을 사용합니다.
-from apps.users.serializers.admin_user_list_serializer import UserSerializer
+from apps.users.models import User
+from apps.users.serializers.admin_user_manage_serializers import (
+    AdminUserdetailSerializer,
+)
 
 
 @extend_schema(
@@ -19,9 +19,8 @@ from apps.users.serializers.admin_user_list_serializer import UserSerializer
     description="지정된 `user_id`에 해당하는 회원의 상세 정보를 조회합니다. 본인 또는 관리자만 접근 가능합니다.",
 )
 class UserInfoRetrieveView(generics.RetrieveAPIView[User]):
-    # 지정된 user_id에 해당하는 회원의 상세 정보를 조회하는 API 뷰입니다.
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = AdminUserdetailSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "user_id"
 
@@ -29,7 +28,8 @@ class UserInfoRetrieveView(generics.RetrieveAPIView[User]):
         try:
             instance = self.get_object()
 
-            if hasattr(request.user, "is_staff") and not request.user.is_staff and request.user != instance:
+            # 관리자가 아니면서, 본인의 정보가 아닌 경우에만 접근을 거부합니다.
+            if not request.user.is_staff and request.user.id != instance.id:
                 return Response(
                     {"error": "FORBIDDEN", "message": "다른 회원의 정보를 조회할 권한이 없습니다."},
                     status=status.HTTP_403_FORBIDDEN,

@@ -8,7 +8,7 @@ from apps.users.models import User
 
 # Mypy가 User 모델을 인지할 수 있도록 생성
 # 관리자 회원 정보 조회
-class UserSerializer(serializers.ModelSerializer[User]):
+class AdminUserdetailSerializer(serializers.ModelSerializer[User]):
 
     # API 명세서의 "id" 필드는 User 모델의 "user_id"에 해당합니다.
     id = serializers.IntegerField(source="user_id", read_only=True)

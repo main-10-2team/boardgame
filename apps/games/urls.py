@@ -7,9 +7,9 @@ from apps.games.views.admin_review_management_view import (
 from apps.games.views.game_detail_view import GameDetailView
 from apps.games.views.game_filter_view import GameFilterView
 from apps.games.views.game_list_view import GameListView
-from apps.games.views.game_patch_view import GameReviewPatchAPIView
 from apps.games.views.game_review_create_view import GameReviewCreateView
 from apps.games.views.game_review_delete_view import GameReviewDeleteAPIView
+from apps.games.views.game_review_patch_view import GameReviewPatchAPIView
 from apps.games.views.game_reviewlist_views import GameReviewListView
 from apps.games.views.game_search_view import GameSearchView
 

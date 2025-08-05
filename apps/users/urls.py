@@ -20,10 +20,10 @@ from apps.users.views.auth.auth_reset_password_views import (
 )
 from apps.users.views.auth.auth_signup_views import SignupView
 from apps.users.views.profile_views import (
+    AccountDeleteView,
     PasswordChangeView,
     UserProfileUpdateView,
     UserProfileView,
-    AccountDeleteView,
 )
 
 from .views.auth.auth_find_id_views import FindIDAPIView

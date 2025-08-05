@@ -96,6 +96,9 @@ class PreferenceSubmitView(APIView):
 
         user = cast(User, request.user)
 
+        if user.status == "deleted":
+            return Response({"detail": "탈퇴한 계정입니다. 이용할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = PreferenceSubmitSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

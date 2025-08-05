@@ -1,6 +1,8 @@
 import logging
+from datetime import timedelta
 from typing import Any, cast
 
+from django.utils import timezone
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -14,12 +16,12 @@ from rest_framework_simplejwt.token_blacklist.models import (
     OutstandingToken,
 )
 
-from apps.users.models import User
+from apps.users.models import AccountDeletionReason, User
 from apps.users.serializers.profile_serializers import (
+    AccountDeleteSerializer,
     PasswordChangeSerializer,
     UserProfileSerializer,
     UserProfileUpdateSerializer,
-    AccountDeleteSerializer,
 )
 
 
@@ -54,6 +56,9 @@ class UserProfileView(APIView):
 
     def get(self, request: Request) -> Response:
         user = cast(User, request.user)
+
+        if user.status == "deleted":
+            return Response({"detail": "탈퇴한 계정입니다. 이용할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = UserProfileSerializer(user)
         return Response(serializer.data)
@@ -109,6 +114,11 @@ class UserProfileUpdateView(APIView):
     def patch(self, request: Request) -> Response:
         try:
             user = cast(User, request.user)
+
+            if user.status == "deleted":
+                return Response(
+                    {"detail": "탈퇴한 계정입니다. 이용할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST
+                )
 
             serializer = UserProfileUpdateSerializer(
                 instance=user,
@@ -196,6 +206,11 @@ class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = cast(User, request.user)
+
+        if user.status == "deleted":
+            return Response({"detail": "탈퇴한 계정입니다. 이용할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
@@ -204,10 +219,10 @@ class PasswordChangeView(APIView):
 
 
 @extend_schema(
-    methods=["DELETE"],
+    methods=["POST"],
     summary="회원 탈퇴",
-    description="로그인한 사용자가 자신의 계정을 비밀번호 인증 후 탈퇴합니다.",
     tags=["유저"],
+    description="회원 탈퇴를 요청합니다. 14일 뒤 실제 삭제됩니다. 그 전까지 복구 가능합니다.",
     request=AccountDeleteSerializer,
     responses={
         200: OpenApiResponse(
@@ -252,13 +267,28 @@ class PasswordChangeView(APIView):
 )
 class AccountDeleteView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
-    def post(
-        self, request: Request, *args: Any, **kwargs: Any
-    ) -> Response:  # swagger에서 디버깅해볼때는 delete -> post
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = cast(User, request.user)
+
+        if user.status == "deleted":
+            return Response({"detail": "탈퇴한 계정입니다. 이용할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = AccountDeleteSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             user = cast(User, request.user)
+            user.status = "deleted"
+            user.save(update_fields=["status"])
+
+            due_date = timezone.now() + timedelta(days=14)
+
+            AccountDeletionReason.objects.create(
+                user=user,
+                reason=serializer.validated_data["reason"],
+                additional_text=serializer.validated_data.get("additional_text", ""),
+                due_date=due_date,
+            )
 
             try:
                 tokens = OutstandingToken.objects.filter(user=user)
@@ -267,6 +297,7 @@ class AccountDeleteView(APIView):
             except TokenError:
                 pass
 
-            user.delete()
-            return Response({"message": "회원 탈퇴되었습니다."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "회원 탈퇴가 요청되었습니다. 14일 후 자동 삭제됩니다."}, status=status.HTTP_200_OK
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -13,6 +13,8 @@ from apps.games.views.game_review_delete_view import GameReviewDeleteAPIView
 from apps.games.views.game_review_patch_view import GameReviewPatchAPIView
 from apps.games.views.game_reviewlist_views import GameReviewListView
 from apps.games.views.game_search_view import GameSearchView
+from apps.games.views.likes_remove_views import LikeRemoveView
+from apps.games.views.likes_views import LikeListView, LikeView
 
 urlpatterns = [
     path("games/", GameListView.as_view(), name="game-list"),
@@ -26,4 +28,7 @@ urlpatterns = [
     path("admin/reviews/", AdminReviewListview.as_view(), name="admin-review-list"),
     path("admin/reviews/<int:review_id>/", AdminReviewDeleteView.as_view(), name="admin_review_delete"),
     path("admin/genres", AdminGenreRegisterView.as_view(), name="admin-genre-register"),
+    path("likes/", LikeView.as_view(), name="like"),
+    path("likes/list/", LikeListView.as_view(), name="like-list"),
+    path("likes/remove/", LikeRemoveView.as_view(), name="like_remove"),
 ]

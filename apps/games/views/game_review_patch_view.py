@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.games.models import Review
-from apps.games.serializers.game_patch_serializer import (
+from apps.games.serializers.game_review_patch_serializer import (
     GameReviewPatchRequestSerializer,
     ReviewPatchResponseReviewSerializer,
 )

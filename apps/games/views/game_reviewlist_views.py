@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.games.models import Game, Review
-from apps.games.serializers.review_list_serializer import ReviewListSerializer
+from apps.games.serializers.game_review_list_serializer import ReviewListSerializer
 from apps.users.models import User
 
 

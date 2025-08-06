@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.games.views.admin_genre_views import AdminGenreRegisterView
 from apps.games.views.admin_review_management_view import (
     AdminReviewDeleteView,
     AdminReviewListview,
@@ -22,4 +23,5 @@ urlpatterns = [
     path("reviews/<int:review_id>", GameReviewPatchAPIView.as_view(), name="game-review-patch"),
     path("admin/reviews/", AdminReviewListview.as_view(), name="admin-review-list"),
     path("admin/reviews/<int:review_id>/", AdminReviewDeleteView.as_view(), name="admin_review_delete"),
+    path("admin/genres", AdminGenreRegisterView.as_view(), name="admin-genre-register"),
 ]

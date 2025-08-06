@@ -78,7 +78,7 @@ class AdminGenreRegisterView(generics.CreateAPIView[Genre]):
 class AdminGenreUpdateView(generics.UpdateAPIView[Genre]):
     queryset = Genre.objects.all()
     serializer_class = AdminGenreUpdateSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     lookup_field: str = "genre_id"
     http_method_names = ["patch"]
 

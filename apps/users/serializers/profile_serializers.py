@@ -199,7 +199,7 @@ class AccountDeleteSerializer(serializers.Serializer[Any]):
     def validate_password(self, value: str) -> str:
         user: User = self.context["request"].user
         if not user.check_password(value):
-            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
+            raise serializers.ValidationError({"detail": "비밀번호가 일치하지 않습니다."})
         return value
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
@@ -208,10 +208,10 @@ class AccountDeleteSerializer(serializers.Serializer[Any]):
 
         if reason == AccountDeletionReasonEnum.OTHER:
             if not additional_text:
-                raise serializers.ValidationError({"additional_text": "기타 사유를 입력해 주세요."})
+                raise serializers.ValidationError({"detail": "기타 사유를 입력해 주세요."})
             if len(additional_text) < 5:
-                raise serializers.ValidationError({"additional_text": "기타 사유는 최소 5자 이상이어야 합니다."})
+                raise serializers.ValidationError({"detail": "기타 사유는 최소 5자 이상이어야 합니다."})
             if len(additional_text) > 500:
-                raise serializers.ValidationError({"additional_text": "기타 사유는 최대 500글자 입니다."})
+                raise serializers.ValidationError({"detail": "기타 사유는 최대 500글자 입니다."})
 
         return attrs

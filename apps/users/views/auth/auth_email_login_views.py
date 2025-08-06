@@ -69,32 +69,25 @@ class EmailLoginAPIView(APIView):
         summary="이메일 로그인",
     )
     def post(self, request: Request) -> Response:
-        print("📥 요청 데이터:", request.data)
 
         serializer = EmailLoginSerializer(data=request.data)
-        print("🧾 serializer.is_valid() 호출 전")
 
         if serializer.is_valid():
-            print("✅ serializer.is_valid() = True")
             email = serializer.validated_data["email"]
             password = serializer.validated_data["password"]
 
             try:
                 user = User.objects.get(email=email)
-                print(f"👤 유저 조회 성공: {user.email}, 활성화 여부: {user.is_active}")
 
                 if not user.is_active:
-                    print("❌ 비활성화된 계정")
                     return Response({"detail": "탈퇴한 계정입니다."}, status=403)
 
                 if not user.check_password(password):
-                    print("❌ 비밀번호 틀림")
                     return Response({"detail": "이메일 또는 비밀번호가 올바르지 않습니다."}, status=401)
 
                 refresh = RefreshToken.for_user(user)
                 user_data = EmailLoginResponseSerializer(user).data
 
-                print("✅ 로그인 성공")
                 return Response(
                     {
                         "message": "이메일 로그인에 성공했습니다.",
@@ -105,9 +98,6 @@ class EmailLoginAPIView(APIView):
                     status=status.HTTP_200_OK,
                 )
             except User.DoesNotExist:
-                print("❌ 유저 없음")
                 return Response({"detail": "이메일 또는 비밀번호가 올바르지 않습니다."}, status=401)
         else:
-            print("⚠️ serializer.is_valid() = False")
-            print("📝 serializer.errors:", serializer.errors)
             return Response(serializer.errors, status=400)

@@ -17,7 +17,8 @@ from apps.games.views.game_review_patch_view import GameReviewPatchAPIView
 from apps.games.views.game_reviewlist_views import GameReviewListView
 from apps.games.views.game_search_view import GameSearchView
 from apps.games.views.likes_remove_views import LikeRemoveView
-from apps.games.views.likes_views import LikeListView, LikeView
+from apps.games.views.likes_views import LikeView, LikeListView
+from apps.games.views.my_review_list_view import MyReviewListView
 
 urlpatterns = [
     path("games/", GameListView.as_view(), name="game-list"),
@@ -28,6 +29,9 @@ urlpatterns = [
     path("games/<int:game_id>/reviews/", GameReviewCreateView.as_view(), name="game-review-list"),
     path("reviews/<int:review_id>patch", GameReviewPatchAPIView.as_view(), name="game-review-patch"),
     path("reviews/<int:review_id>delete", GameReviewDeleteAPIView.as_view(), name="game-review-delete"),
+    path("games/<int:game_id>/reviews/", GameReviewCreateView.as_view(), name="game-review-create"),
+    path("reviews/<int:review_id>", GameReviewPatchAPIView.as_view(), name="game-review-patch"),
+    path("users/reviews/", MyReviewListView.as_view(), name="user-review-list"),
     path("admin/reviews/", AdminReviewListview.as_view(), name="admin-review-list"),
     path("admin/reviews/<int:review_id>/", AdminReviewDeleteView.as_view(), name="admin_review_delete"),
     path("admin/genres", AdminGenreRegisterView.as_view(), name="admin-genre-register"),

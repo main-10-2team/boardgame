@@ -57,8 +57,8 @@ class UserProfileView(APIView):
     def get(self, request: Request) -> Response:
         user = cast(User, request.user)
 
-        if user.status == "deleted":
-            return Response({"detail": "탈퇴한 계정입니다. 이용할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        if user.status == "deleted" or "suspended":
+            return Response({"detail": "탈퇴한 계정이거나 활동 정지 계정입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = UserProfileSerializer(user)
         return Response(serializer.data)
@@ -115,10 +115,8 @@ class UserProfileUpdateView(APIView):
         try:
             user = cast(User, request.user)
 
-            if user.status == "deleted":
-                return Response(
-                    {"detail": "탈퇴한 계정입니다. 이용할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST
-                )
+            if user.status == "deleted" or "suspended":
+                return Response({"detail": "탈퇴한 계정이거나 활동 정지 계정입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
             serializer = UserProfileUpdateSerializer(
                 instance=user,
@@ -208,8 +206,8 @@ class PasswordChangeView(APIView):
     def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = cast(User, request.user)
 
-        if user.status == "deleted":
-            return Response({"detail": "탈퇴한 계정입니다. 이용할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        if user.status == "deleted" or "suspended":
+            return Response({"detail": "탈퇴한 계정이거나 활동 정지 계정입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
@@ -272,8 +270,8 @@ class AccountDeleteView(APIView):
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = cast(User, request.user)
 
-        if user.status == "deleted":
-            return Response({"detail": "탈퇴한 계정입니다. 이용할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        if user.status == "deleted" or "suspended":
+            return Response({"detail": "탈퇴한 계정이거나 활동 정지 계정입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = AccountDeleteSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():

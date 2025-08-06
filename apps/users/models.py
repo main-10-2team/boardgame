@@ -3,6 +3,7 @@ from django.db import models
 
 from apps.games.models import Genre, PlaytimeCategory
 from apps.users.manage import CustomUserManager
+from apps.users.utils.account_delete_reason import AccountDeletionReasonEnum
 
 
 class User(AbstractBaseUser):
@@ -96,3 +97,19 @@ class UserPreferenceGenre(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.nickname} prefers {self.genre.name}"
+
+
+class AccountDeletionReason(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="deletion_reason")
+    reason = models.CharField(max_length=50, choices=AccountDeletionReasonEnum.choices())
+    additional_text = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateField(null=True, blank=True)
+
+    class Meta:
+        db_table = "account_deletion_reason"
+        verbose_name = "회원 탈퇴 사유"
+        verbose_name_plural = "회원 탈퇴 사유 목록"
+
+    def __str__(self) -> str:
+        return f"{self.user.email} - {self.reason}"

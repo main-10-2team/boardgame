@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import sentry_sdk
+from celery.schedules import crontab  # type: ignore
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -233,3 +234,11 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
 APP_FRONTEND_URL = os.getenv("APP_FRONTEND_URL", "http://localhost:3000")
+
+# soft delete 유저 정리
+CELERY_BEAT_SCHEDULE = {
+    "daily-user-deletion-cleanup": {
+        "task": "apps.users.tasks.clean_up_due_deletions",
+        "schedule": crontab(minute=0, hour=3),
+    },
+}

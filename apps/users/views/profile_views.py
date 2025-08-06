@@ -1,6 +1,8 @@
 import logging
+from datetime import timedelta
 from typing import Any, cast
 
+from django.utils import timezone
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -8,9 +10,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.token_blacklist.models import (
+    BlacklistedToken,
+    OutstandingToken,
+)
 
-from apps.users.models import User
+from apps.users.models import AccountDeletionReason, User
 from apps.users.serializers.profile_serializers import (
+    AccountDeleteSerializer,
     PasswordChangeSerializer,
     UserProfileSerializer,
     UserProfileUpdateSerializer,
@@ -48,6 +56,11 @@ class UserProfileView(APIView):
 
     def get(self, request: Request) -> Response:
         user = cast(User, request.user)
+
+        if user.status != "active":
+            return Response(
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         serializer = UserProfileSerializer(user)
         return Response(serializer.data)
@@ -103,6 +116,11 @@ class UserProfileUpdateView(APIView):
     def patch(self, request: Request) -> Response:
         try:
             user = cast(User, request.user)
+
+            if user.status != "active":
+                return Response(
+                    {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+                )
 
             serializer = UserProfileUpdateSerializer(
                 instance=user,
@@ -190,8 +208,102 @@ class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = cast(User, request.user)
+
+        if user.status != "active":
+            return Response(
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "비밀번호가 성공적으로 변경되었습니다."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    methods=["POST"],
+    summary="회원 탈퇴",
+    tags=["유저"],
+    description="회원 탈퇴를 요청합니다. 14일 뒤 실제 삭제됩니다. 그 전까지 복구 가능합니다.",
+    request=AccountDeleteSerializer,
+    responses={
+        200: OpenApiResponse(
+            description="회원 탈퇴 성공",
+            response={
+                "type": "object",
+                "properties": {"message": {"type": "string", "example": "회원 탈퇴되었습니다."}},
+                "required": ["message"],
+            },
+        ),
+        400: OpenApiResponse(
+            description="비밀번호 불일치",
+            response={
+                "type": "object",
+                "properties": {
+                    "password": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "example": ["비밀번호가 일치하지 않습니다."],
+                    }
+                },
+                "required": ["password"],
+            },
+        ),
+        401: OpenApiResponse(
+            description="인증 실패 - 유효하지 않거나 누락된 토큰",
+            response={
+                "type": "object",
+                "properties": {"detail": {"type": "string", "example": "자격 인증 헤더가 제공되지 않았습니다."}},
+                "required": ["detail"],
+            },
+        ),
+        500: OpenApiResponse(
+            description="서버 내부 오류",
+            response={
+                "type": "object",
+                "properties": {"detail": {"type": "string", "example": "서버 내부 오류가 발생했습니다."}},
+                "required": ["detail"],
+            },
+        ),
+    },
+)
+class AccountDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = cast(User, request.user)
+
+        if user.status != "active":
+            return Response(
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = AccountDeleteSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            user = cast(User, request.user)
+            user.status = "deleted"
+            user.save(update_fields=["status"])
+
+            due_date = timezone.now() + timedelta(days=14)
+
+            AccountDeletionReason.objects.create(
+                user=user,
+                reason=serializer.validated_data["reason"],
+                additional_text=serializer.validated_data.get("additional_text", ""),
+                due_date=due_date,
+            )
+
+            try:
+                tokens = OutstandingToken.objects.filter(user=user)
+                for token in tokens:
+                    BlacklistedToken.objects.get_or_create(token=token)
+            except TokenError:
+                pass
+
+            return Response(
+                {"detail": "회원 탈퇴가 요청되었습니다. 14일 후 자동 삭제됩니다."}, status=status.HTTP_200_OK
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

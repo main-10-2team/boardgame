@@ -20,6 +20,7 @@ from apps.users.views.auth.auth_reset_password_views import (
 )
 from apps.users.views.auth.auth_signup_views import SignupView
 from apps.users.views.profile_views import (
+    AccountDeleteView,
     PasswordChangeView,
     UserProfileUpdateView,
     UserProfileView,
@@ -33,7 +34,8 @@ urlpatterns = [
     path("profile/", UserProfileView.as_view(), name="user-profile"),
     path("profile/update/", UserProfileUpdateView.as_view(), name="user-profile-update"),
     path("profile/password/", PasswordChangeView.as_view(), name="password-change"),
-    path("preferences", PreferenceSubmitView.as_view(), name="preference-submit"),
+    path("profile/delete/", AccountDeleteView.as_view(), name="account-delete"),
+    path("preferences/", PreferenceSubmitView.as_view(), name="preference-submit"),
     path("auth/signup/", SignupView.as_view(), name="signup"),
     path("auth/send-code/", SendEmailCodeView.as_view(), name="send-email-code"),
     path("auth/verify-code/", VerifyEmailCodeView.as_view(), name="verify-email-code"),

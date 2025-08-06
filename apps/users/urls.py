@@ -1,6 +1,10 @@
 from django.urls import path
 
-from apps.users.views.admin_user_manage_view import AdminUserDetailView
+from apps.users.views.admin_user_manage_view import (
+    AdminUserDeactivateView,
+    AdminUserDetailView,
+    AdminUserSuspendView,
+)
 from apps.users.views.auth.auth_code_email_view import (
     SendEmailCodeView,
     VerifyEmailCodeView,
@@ -45,4 +49,8 @@ urlpatterns = [
     path("oauth/google/callback/", GoogleOAuthCallbackView.as_view(), name="google-login-callback"),
     path("oauth/google/login/", GoogleOAuthLoginStartView.as_view(), name="google-login-start"),
     path("admin/user/<int:user_id>/", AdminUserDetailView.as_view(), name="admin-user-info"),
+    path("admin/users/<int:user_id>/actions/suspend", AdminUserSuspendView.as_view(), name="admin-user-suspend"),
+    path(
+        "admin/users/<int:user_id>/actions/deactivate", AdminUserDeactivateView.as_view(), name="admin-user-deactivate"
+    ),
 ]

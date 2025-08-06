@@ -33,6 +33,7 @@ class User(AbstractBaseUser):
     phone_number = models.CharField(max_length=20, null=False)
     role = models.CharField(max_length=5, choices=ROLE_CHOICES, default="user")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="active")
+    suspended_until = models.DateTimeField(null=True, blank=True, help_text="사용자 차단 기간 (NULL이면 영구 정지)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     USERNAME_FIELD = "email"

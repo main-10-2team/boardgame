@@ -58,7 +58,9 @@ class UserProfileView(APIView):
         user = cast(User, request.user)
 
         if user.status != "active":
-            return Response({"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         serializer = UserProfileSerializer(user)
         return Response(serializer.data)
@@ -116,7 +118,9 @@ class UserProfileUpdateView(APIView):
             user = cast(User, request.user)
 
             if user.status != "active":
-                return Response({"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+                )
 
             serializer = UserProfileUpdateSerializer(
                 instance=user,
@@ -207,7 +211,9 @@ class PasswordChangeView(APIView):
         user = cast(User, request.user)
 
         if user.status != "active":
-            return Response({"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
@@ -271,7 +277,9 @@ class AccountDeleteView(APIView):
         user = cast(User, request.user)
 
         if user.status != "active":
-            return Response({"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         serializer = AccountDeleteSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():

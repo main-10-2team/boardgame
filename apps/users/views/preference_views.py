@@ -97,7 +97,9 @@ class PreferenceSubmitView(APIView):
         user = cast(User, request.user)
 
         if user.status != "active":
-            return Response({"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         serializer = PreferenceSubmitSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

@@ -19,7 +19,7 @@ from apps.users.serializers.admin_user_manage_serializers import (
 
 
 @extend_schema(
-    tags=["User - 관리자 회원 관리"],
+    tags=["[Admin]"],
     summary="관리자 회원 정보 조회",
     description="지정된 `user_id`에 해당하는 회원의 상세 정보를 조회합니다. 본인 또는 관리자만 접근 가능합니다.",
 )
@@ -71,8 +71,8 @@ class IsAdminRole(IsAdminUser):
 
 
 @extend_schema(
-    tags=["[Admin] User - 관리자 회원 관리"],
-    summary="회원 제재 (활동 정지)",
+    tags=["[Admin]"],
+    summary="관리자 회원 제재 (활동 정지)",
     description="특정 회원의 활동을 일시적 또는 영구적으로 정지시킵니다. 제재 기간 정보는 User 모델의 suspended_until 필드에 저장됩니다.",
     request=UserSuspendSerializer,
 )
@@ -130,8 +130,8 @@ class AdminUserSuspendView(generics.UpdateAPIView[User]):
 
 
 @extend_schema(
-    tags=["[Admin] User - 관리자 회원 관리"],
-    summary="회원 탈퇴 (영구 삭제)",
+    tags=["[Admin]"],
+    summary="관리자 회원 탈퇴 (영구 삭제)",
     description="특정 회원의 계정을 시스템에서 영구적으로 삭제합니다.",
     request=UserDeactivateSerializer,
 )

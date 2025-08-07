@@ -16,7 +16,7 @@ from apps.users.models import User
 
 @extend_schema(
     # API 그룹을 나타내는 태그 (문서 UI에서 그룹화됩니다)
-    tags=["[Admin] Review - 관리자 리뷰 관리"],
+    tags=["[Admin]"],
     # API의 간략한 요약
     summary="관리자 리뷰 목록 조회",
     # API에 대한 상세 설명
@@ -204,7 +204,7 @@ class AdminReviewListview(generics.ListAPIView[Review]):
 
 
 @extend_schema(
-    tags=["[Admin] Review - 관리자 리뷰 관리"],
+    tags=["[Admin]"],
     summary="관리자 리뷰 삭제",
     description="review_id에 해당하는 리뷰 레코드를 시스템에서 삭제합니다. 관리자만 접근 가능합니다.",
     responses={

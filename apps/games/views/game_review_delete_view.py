@@ -48,6 +48,19 @@ class GameReviewDeleteAPIView(APIView):
         },
     )
     def delete(self, request: Request, review_id: int) -> Response:
+        user = cast(User, request.user)
+
+        if not user.is_authenticated:
+            return Response(
+                {"detail": "로그인이 필요합니다."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if user.status != "active":
+            return Response(
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
             review = Review.objects.get(pk=review_id)
         except Review.DoesNotExist:
@@ -56,41 +69,13 @@ class GameReviewDeleteAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        user = cast(User, request.user)
-        if not user.is_authenticated:
-            return Response(
-                {"detail": "로그인이 필요합니다."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
         if review.user_id != user.user_id:
             return Response(
                 {"detail": ReviewDeleteSerializer().error_messages["not_author"]},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        game = review.game
-        game_id = review.game_id
-        review_id = review.review_id
+        serializer = ReviewDeleteSerializer(instance=review)
+        serializer.save()
 
-        review.delete()
-
-        reviews = Review.objects.filter(game=game)
-        average_rating = reviews.aggregate(Avg("rating"))["rating__avg"] or 0.0
-        game.average_rating = round(average_rating, 2)
-        game.reviews_count = reviews.count()
-        game.save(update_fields=["average_rating", "reviews_count", "updated_at"])
-
-        user.review_count = user.reviews.count()
-        user.save(update_fields=["review_count"])
-
-        response_data = {
-            "status": "success",
-            "message": "리뷰가 성공적으로 삭제되었습니다.",
-            "game_id": game_id,
-            "review_id": review_id,
-            "updated_average_rating": game.average_rating,
-            "remove_from_list": True,
-        }
-
-        return Response(response_data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)

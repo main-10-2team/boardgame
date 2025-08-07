@@ -9,8 +9,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.games.models import Game, Review
-from apps.games.serializers.game_review_list_serializer import ReviewListSerializer
+from apps.games.serializers.game_review_list_serializer import (
+    GameReviewListResponseSerializer,
+    ReviewListSerializer,
+)
 from apps.users.models import User
 
 
@@ -53,52 +55,25 @@ class GameReviewListView(APIView):
         },
     )
     def get(self, request: Request, game_id: int, *args: Any, **kwargs: Any) -> Response:
+        user = cast(User, self.request.user)
 
-        try:
-            page = int(request.query_params.get("page", 1))
-            limit = int(request.query_params.get("limit", 10))
-        except ValueError:
-            return Response({"detail": "page 및 limit는 정수여야 합니다."}, status=status.HTTP_400_BAD_REQUEST)
+        if not user.is_authenticated:
+            return Response({"detail": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if limit < 1:
-            return Response({"detail": "limit는 1 이상이어야 합니다."}, status=status.HTTP_400_BAD_REQUEST)
-
-        limit = min(limit, 10)
-
-        if not Game.objects.filter(game_id=game_id).exists():
-            return Response({"detail": "유효하지 않은 게임 ID입니다."}, status=status.HTTP_400_BAD_REQUEST)
-
-        reviews_qs = Review.objects.filter(game_id=game_id).select_related("user").order_by("-created_at")
-        total_reviews = reviews_qs.count()
-
-        if total_reviews == 0:
-            return Response({"detail": "리뷰가 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
-
-        reviews_per_page = limit
-        total_pages = total_reviews // reviews_per_page
-        if total_reviews % reviews_per_page != 0:
-            total_pages += 1
-
-        if page < 1 or page > total_pages:
+        if user.status != "active":
             return Response(
-                {"detail": f"요청한 페이지는 존재하지 않습니다. (1 ~ {total_pages})"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        offset = (page - 1) * reviews_per_page
-        reviews_page = reviews_qs[offset : offset + reviews_per_page]
+        data = {
+            "game_id": game_id,
+            "page": request.query_params.get("page", 1),
+            "limit": request.query_params.get("limit", 10),
+        }
 
-        serializer = ReviewListSerializer(reviews_page, many=True)
+        serializer = GameReviewListResponseSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(
-            {
-                "status": "success",
-                "game_id": game_id,
-                "total_reviews": total_reviews,
-                "page": page,
-                "limit": limit,
-                "total_pages": total_pages,
-                "reviews": serializer.data,
-            },
-            status=status.HTTP_200_OK,
-        )
+        response_data = serializer.get_response_data()
+        return Response(response_data, status=status.HTTP_200_OK)

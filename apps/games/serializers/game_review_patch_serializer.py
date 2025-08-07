@@ -1,3 +1,6 @@
+from typing import Any
+
+from django.db.models import Avg
 from rest_framework import serializers
 
 from apps.games.models import Review
@@ -24,6 +27,32 @@ class GameReviewPatchRequestSerializer(serializers.ModelSerializer[Review]):
         if not value.strip():
             raise serializers.ValidationError("리뷰 내용 입력해주세요.")
         return value
+
+    def save(self, **kwargs: Any) -> Review:
+        review = super().save(**kwargs)
+
+        average_rating = (
+            Review.objects.filter(game=review.game).aggregate(avg_rating=Avg("rating")).get("avg_rating")
+        ) or 0.0
+
+        average_rating = round(average_rating, 2)
+
+        review.game.average_rating = average_rating
+        review.game.save(update_fields=["average_rating"])
+
+        self._updated_review = review
+        self._updated_average_rating = average_rating
+
+        return review
+
+    def to_representation(self, instance: Review) -> dict[str, Any]:
+
+        return {
+            "status": "success",
+            "message": "리뷰가 성공적으로 수정되었습니다.",
+            "review": ReviewPatchResponseReviewSerializer(self._updated_review).data,
+            "updated_average_rating": self._updated_average_rating,
+        }
 
 
 class ReviewPatchResponseReviewSerializer(serializers.ModelSerializer[Review]):

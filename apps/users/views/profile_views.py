@@ -289,7 +289,7 @@ class AccountDeleteView(APIView):
 
             due_date = timezone.now() + timedelta(days=14)
 
-            AccountDeletionReason.objects.create(# type: ignore[attr-defined]
+            AccountDeletionReason.objects.create(  # type: ignore[attr-defined]
                 user=user,
                 reason=serializer.validated_data["reason"],
                 additional_text=serializer.validated_data.get("additional_text", ""),

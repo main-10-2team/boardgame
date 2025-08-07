@@ -70,13 +70,13 @@ class GameViewLogAdmin(admin.ModelAdmin):  # type: ignore
 
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):# type: ignore
+class CategoryAdmin(admin.ModelAdmin):  # type: ignore
     list_display = ("category_id", "name", "created_at")
     search_fields = ("name",)
 
 
 @admin.register(GameCategory)
-class GameCategoryAdmin(admin.ModelAdmin):# type: ignore
+class GameCategoryAdmin(admin.ModelAdmin):  # type: ignore
     list_display = ("game", "category", "created_at")
     list_filter = ("category",)
     search_fields = ("game__title", "category__name")

@@ -57,6 +57,17 @@ class MyReviewListView(APIView):
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = cast(User, request.user)
 
+        if not user.is_authenticated:
+            return Response(
+                {"detail": "로그인이 필요합니다."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if user.status != "active":
+            return Response(
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
             page = int(request.query_params.get("page", 1))
             limit = min(int(request.query_params.get("limit", 10)), 10)
@@ -83,15 +94,8 @@ class MyReviewListView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        serialized_reviews = MyReviewListSerializer(page_obj, many=True).data
+        response_serializer = MyReviewListResponseSerializer(
+            page_obj, context={"page": page, "limit": limit, "paginator": paginator}
+        )
 
-        response_data = {
-            "status": "success",
-            "total_reviews": paginator.count,
-            "page": page,
-            "limit": limit,
-            "total_pages": paginator.num_pages,
-            "reviews": serialized_reviews,
-        }
-
-        return Response(response_data, status=status.HTTP_200_OK)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)

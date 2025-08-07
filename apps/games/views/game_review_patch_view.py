@@ -1,3 +1,5 @@
+from typing import cast
+
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
@@ -13,6 +15,7 @@ from apps.games.serializers.game_review_patch_serializer import (
     GameReviewPatchRequestSerializer,
     ReviewPatchResponseReviewSerializer,
 )
+from apps.users.models import User
 
 
 class GameReviewPatchAPIView(APIView):
@@ -72,6 +75,19 @@ class GameReviewPatchAPIView(APIView):
         },
     )
     def patch(self, request: Request, review_id: int) -> Response:
+        user = cast(User, request.user)
+
+        if not user.is_authenticated:
+            return Response(
+                {"detail": "로그인이 필요합니다."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if user.status != "active":
+            return Response(
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
             review = Review.objects.select_related("user", "game").get(review_id=review_id)
         except Review.DoesNotExist:
@@ -92,25 +108,6 @@ class GameReviewPatchAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        updated_review = serializer.save()
+        serializer.save()
 
-        average_rating = (
-            Review.objects.filter(game=updated_review.game).aggregate(avg_rating=Avg("rating")).get("avg_rating")
-        )
-
-        average_rating = round(average_rating or 0.0, 2)
-
-        game = updated_review.game
-        game.average_rating = average_rating
-        game.save(update_fields=["average_rating"])
-
-        response_serializer = ReviewPatchResponseReviewSerializer(review)
-
-        response_data = {
-            "status": "success",
-            "message": "리뷰가 성공적으로 수정되었습니다.",
-            "review": response_serializer.data,
-            "updated_average_rating": review.game.average_rating,
-        }
-
-        return Response(response_data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)

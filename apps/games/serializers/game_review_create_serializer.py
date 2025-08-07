@@ -6,7 +6,7 @@ from apps.games.models import Game, Review
 from apps.users.models import User
 
 
-class ReviewCreateSerializer(serializers.ModelSerializer[Review]):
+class GameReviewCreateSerializer(serializers.ModelSerializer[Review]):
     rating = serializers.FloatField(min_value=1.0, max_value=5.0)
     content = serializers.CharField(required=False, allow_blank=True, max_length=500)
 
@@ -38,7 +38,7 @@ class ReviewCreateSerializer(serializers.ModelSerializer[Review]):
         return data
 
 
-class ReviewResponseSerializer(serializers.ModelSerializer[Review]):
+class GameReviewResponseSerializer(serializers.ModelSerializer[Review]):
     user_id = serializers.SerializerMethodField()
     nickname = serializers.SerializerMethodField()
 
@@ -58,3 +58,25 @@ class ReviewResponseSerializer(serializers.ModelSerializer[Review]):
 
     def get_nickname(self, obj: Review) -> str:
         return obj.user.nickname
+
+
+class GameReviewCreateResponseSerializer(serializers.Serializer[Any]):
+    status = serializers.CharField(default="success")
+    message = serializers.CharField(default="리뷰가 성공적으로 작성되었습니다.")
+    game_id = serializers.SerializerMethodField()
+    review = GameReviewResponseSerializer()
+    updated_average_rating = serializers.FloatField()
+    refresh_page = serializers.BooleanField(default=True)
+
+    def get_game_id(self, obj: Review) -> int:
+        return obj.game.game_id
+
+    def to_representation(self, instance: Review) -> dict[str, Any]:
+        return {
+            "status": "success",
+            "message": "리뷰가 성공적으로 작성되었습니다.",
+            "game_id": instance.game.game_id,
+            "review": GameReviewResponseSerializer(instance).data,
+            "updated_average_rating": instance.game.average_rating,
+            "refresh_page": True,
+        }

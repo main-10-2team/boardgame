@@ -1,5 +1,6 @@
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
+from django.db.models import QuerySet
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.pagination import PageNumberPagination
@@ -32,81 +33,19 @@ class GameFilterView(APIView):
         responses={200: GameFilterSerializer(many=True)},
     )
     def get(self, request: Request) -> Response:
-        players_param = request.query_params.get("players")
-        playtime_min_minutes = request.query_params.get("playtime_min_minutes")
-        playtime_max_minutes = request.query_params.get("playtime_max_minutes")
-        difficulty_param = request.query_params.get("difficulty")
-
-        players = None
-        play_time = None
-        difficulty = None
-
-        queryset = Game.objects.all()
-
-        from rest_framework.exceptions import ValidationError
-
-        if players_param:
-            try:
-                players = int(players_param)
-                if players < 0:
-                    raise ValidationError({"detail": "플레이어 수는 1 이상이어야 합니다."})
-                queryset = queryset.filter(min_players__lte=players, max_players__gte=players)
-            except ValueError:
-                raise ValidationError({"detail": "플레이어 수는 숫자여야 합니다. 예: 2, 4, 6 등"})
-
-        if playtime_min_minutes is not None:
-            try:
-                playtime_min = int(playtime_min_minutes)
-                queryset = queryset.filter(playtime_min_minutes__gte=playtime_min)
-            except ValueError:
-                return Response({"detail": "최소 플레이 시간이 유효하지 않습니다."}, status=400)
-
-        if playtime_max_minutes is not None:
-            try:
-                playtime_max = int(playtime_max_minutes)
-                queryset = queryset.filter(playtime_max_minutes__lte=playtime_max)
-            except ValueError:
-                return Response({"detail": "최대 플레이 시간이 유효하지 않습니다."}, status=400)
-
-        difficulty_map = {
-            "쉬움": (0.0, 2.0),
-            "중급": (2.0, 4.0),
-            "어려움": (4.0, 5.0),
-        }
-
-        if difficulty_param:
-            if difficulty_param in difficulty_map:
-                lower, upper = difficulty_map[difficulty_param]
-                difficulty = difficulty_param
-                queryset = queryset.filter(difficulty__gte=lower, difficulty__lt=upper)
-            else:
-                try:
-                    difficulty_float = float(difficulty_param)
-                    if 0.0 <= difficulty_float <= 5.0:
-                        lower = round(difficulty_float - 0.5, 1)
-                        upper = round(difficulty_float + 0.5, 1)
-                        difficulty = str(difficulty_float)
-                        queryset = queryset.filter(difficulty__gte=lower, difficulty__lt=upper)
-                    else:
-                        raise ValueError
-                except ValueError:
-                    return Response({"detail": "난이도는 '쉬움', '중급', '어려움' 중 하나여야합니다."}, status=400)
+        serializer = GameFilterSerializer(context={"request": request})
+        queryset, filters = serializer.filter_queryset()
 
         paginator = PageNumberPagination()
         paginator.page_size_query_param = "page_size"
-        paginated_qs = paginator.paginate_queryset(queryset, request)
+        paginated_qs: Optional[List[Game]] = paginator.paginate_queryset(queryset, request)
 
         serializer = GameFilterSerializer(paginated_qs, many=True)
-        response_data: Dict[str, Any] = {
+        response_data = {
             "total_results": queryset.count(),
             "page": int(request.query_params.get("page", 1)),
             "limit": paginator.page_size,
-            "applied_filters": {
-                "players": players,
-                "play_time": play_time,
-                "difficulty": difficulty,
-            },
+            "applied_filters": filters,
             "games": serializer.data,
         }
-
         return paginator.get_paginated_response(response_data)

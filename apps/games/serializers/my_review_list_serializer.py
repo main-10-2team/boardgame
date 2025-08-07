@@ -44,6 +44,23 @@ class MyReviewListResponseSerializer(serializers.Serializer[Any]):
     total_pages = serializers.IntegerField()
     reviews = MyReviewListSerializer(many=True)
 
+    def to_representation(self, instance: Any) -> Dict[str, Any]:
+        page = self.context["page"]
+        limit = self.context["limit"]
+        paginator = self.context["paginator"]
+
+        serialized_reviews = MyReviewListSerializer(instance, many=True).data
+
+        return {
+            "status": "success",
+            "message": "리뷰 목록을 성공적으로 불러왔습니다.",
+            "total_reviews": paginator.count,
+            "page": page,
+            "limit": limit,
+            "total_pages": paginator.num_pages,
+            "reviews": serialized_reviews,
+        }
+
 
 class MyReviewListErrorSerializer(serializers.Serializer[Any]):
     detail = serializers.CharField()

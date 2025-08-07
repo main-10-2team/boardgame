@@ -18,7 +18,7 @@ from apps.games.serializers.admin_genre_serializers import (
     AdminGenreUpdateSerializer,
 )
 from apps.users.models import User
-from apps.users.utils.permission import IsAdminRole
+from core.utils.permission import IsAdminRole
 
 
 # 관리자 장르 등록 API
@@ -26,7 +26,7 @@ from apps.users.utils.permission import IsAdminRole
     tags=["[Admin]"],
     summary="관리자 장르 등록",
     description="새로운 장르의 이름(name)을 입력받아 시스템에 등록합니다.",
-    request=AdminGenreCreateSerializer,  # **[수정됨]** 시리얼라이저 이름 변경
+    request=AdminGenreCreateSerializer,
 )
 class AdminGenreRegisterView(generics.CreateAPIView[Genre]):
 

@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from apps.games.models import Game, Review
 from apps.games.serializers.admin_review_management_serializers import ReviewSerializer
 from apps.users.models import User
-from apps.users.utils.permission import IsAdminRole
+from core.utils.permission import IsAdminRole
 
 
 @extend_schema(

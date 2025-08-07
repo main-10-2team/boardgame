@@ -15,7 +15,7 @@ from apps.users.serializers.admin_user_manage_serializers import (
     UserDeactivateSerializer,
     UserSuspendSerializer,
 )
-from apps.users.utils.permission import IsAdminRole
+from core.utils.permission import IsAdminRole
 
 
 @extend_schema(

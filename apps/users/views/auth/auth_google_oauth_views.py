@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.users.models import SocialAccount, User
-from apps.users.utils.jwt import generate_jwt_token_pair
+from core.utils.jwt import generate_jwt_token_pair
 
 
 @extend_schema(
@@ -160,6 +160,7 @@ class GoogleOAuthCallbackView(APIView):
         access_token_jwt, refresh_token = generate_jwt_token_pair(user)
 
         # 5. 결과 응답 or 프론트 리디렉트
-        frontend_url = settings.APP_FRONTEND_URL or "http://localhost:3000"
-        redirect_url = f"{frontend_url}/oauth/callback?access_token={access_token_jwt}&refresh_token={refresh_token}"
-        return redirect(redirect_url)
+        # frontend_url = settings.APP_FRONTEND_URL or "http://localhost:3000"
+        # redirect_url = f"{frontend_url}/oauth/callback?access_token={access_token_jwt}&refresh_token={refresh_token}"
+        # return redirect(redirect_url)
+        return Response({"access_token": access_token_jwt, "refresh_token": refresh_token}, status=status.HTTP_200_OK)

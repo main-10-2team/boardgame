@@ -60,7 +60,7 @@ from apps.users.models import User
             examples=[
                 OpenApiExample(
                     name="유효하지 않은 게임 ID",
-                    value={"game_id": ["유효하지 않은 게임 ID 입니다."]},
+                    value={"detail": "유효하지 않은 게임 ID 입니다."},
                 ),
             ],
         ),
@@ -95,7 +95,7 @@ class LikeView(APIView):
         try:
             game = Game.objects.get(game_id=game_id)
         except Game.DoesNotExist:
-            return Response({"game_id": ["유효하지 않은 게임 ID 입니다."]}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "유효하지 않은 게임 ID 입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = cast(User, request.user)
 

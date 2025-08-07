@@ -17,11 +17,27 @@ class Genre(models.Model):
         return self.name
 
 
+class Category(models.Model):
+    category_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255, unique=True, null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "category"
+        verbose_name = "카테고리"
+        verbose_name_plural = "카테고리 목록"
+
+    def str(self) -> str:
+        return self.name
+
+
 class Game(models.Model):
     game_id = models.AutoField(primary_key=True)
     age = models.IntegerField(null=True, blank=True)
     title = models.CharField(max_length=255, unique=True, null=False)
     genres = models.ManyToManyField("Genre", through="GameGenre", related_name="games")  # type: ignore
+    categories = models.ManyToManyField("Category", through="GameCategory", related_name="games")  # type: ignore
     like_count = models.PositiveIntegerField(default=0)
     reviews_count = models.PositiveIntegerField(default=0)
     description = models.TextField(null=True, blank=True)
@@ -123,21 +139,6 @@ class Like(models.Model):
         return f"{self.user} likes {self.game}"
 
 
-class PlaytimeCategory(models.Model):
-    playtime_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255, null=False)
-    min_minutes = models.IntegerField(null=False)
-    max_minutes = models.IntegerField(null=False)
-
-    class Meta:
-        db_table = "playtime_category"
-        verbose_name = "게임 시간 카테고리"
-        verbose_name_plural = "게임 시간 카테고리 목록"
-
-    def __str__(self) -> str:
-        return self.name
-
-
 class GameViewLog(models.Model):
     view_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(
@@ -155,3 +156,19 @@ class GameViewLog(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user} viewed {self.game}"
+
+
+class GameCategory(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=False, related_name="game_categories")
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, null=False, related_name="category_games")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "game_category"
+        verbose_name = "게임 카테고리"
+        verbose_name_plural = "게임 카테고리"
+        unique_together = ("category", "game")
+
+    def str(self) -> str:
+        return f"{self.game} - {self.category}"

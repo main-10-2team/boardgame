@@ -3,7 +3,7 @@ from typing import Any
 from rest_framework import serializers
 from rest_framework.serializers import CharField, EmailField, Serializer
 
-from apps.users.utils.redis_utils import (
+from core.utils.redis_utils import (
     get_restore_email_code,
     get_signup_email_code,
 )

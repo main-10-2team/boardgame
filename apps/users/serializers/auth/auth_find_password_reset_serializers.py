@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.serializers import CharField, EmailField, Serializer
 
 from apps.users.models import User
-from apps.users.utils.redis_utils import get_restore_email_code
+from core.utils.redis_utils import get_restore_email_code
 
 
 class PasswordResetVerifySerializer(Serializer[Any]):

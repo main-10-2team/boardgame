@@ -10,8 +10,8 @@ from apps.users.serializers.auth.auth_code_email_serializers import (
     EmailVerifyCodeSerializer,
 )
 from apps.users.tasks import send_verification_email_task
-from apps.users.utils.base62 import generate_base62_code
-from apps.users.utils.redis_utils import (
+from core.utils.base62 import generate_base62_code
+from core.utils.redis_utils import (
     delete_restore_email_code,
     delete_signup_email_code,
     get_restore_email_code,

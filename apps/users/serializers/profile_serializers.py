@@ -13,7 +13,7 @@ from unidecode import unidecode
 
 from apps.games.models import Genre
 from apps.users.models import User
-from apps.users.utils.account_delete_reason import AccountDeletionReasonEnum
+from core.utils.account_delete_reason import AccountDeletionReasonEnum
 from core.utils.s3_file_upload import S3Uploader
 
 logger = logging.getLogger(__name__)
@@ -55,12 +55,6 @@ class UserProfileSerializer(serializers.ModelSerializer[User]):
 
     def get_like_count(self, obj: User) -> int:
         return obj.likes.all().count()
-
-    def get_preferred_genres(self, obj: User) -> list[str]:
-        return [genre.name for genre in obj.preferred_genres.all()]
-
-    def get_preferred_playtimes(self, obj: User) -> list[str]:
-        return [pt.name for pt in obj.preferred_playtimes.all()]
 
     def get_popular_genres(self, obj: User) -> list[str]:
         genre_qs = (

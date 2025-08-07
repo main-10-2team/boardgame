@@ -10,8 +10,8 @@ from django.utils.text import slugify
 from rest_framework import serializers
 from unidecode import unidecode
 
-from apps.games.models import Genre, PlaytimeCategory
-from apps.users.models import User, UserPreferenceGenre, UserPreferencePlaytime
+from apps.games.models import Genre
+from apps.users.models import User
 from core.utils.s3_file_upload import S3Uploader
 
 logger = logging.getLogger(__name__)
@@ -101,20 +101,6 @@ class SignupSerializer(serializers.Serializer):  # type: ignore
                 else:
                     logger.error(f"S3 프로필 이미지 업로드 실패: {profile_img_file.name}")
                     raise serializers.ValidationError({"detail": "프로필 이미지 업로드에 실패했습니다."})
-
-            if preferred_genres:
-                user_preference_genres = [
-                    UserPreferenceGenre(user=user, genre=genre_obj, created_at=datetime.now())
-                    for genre_obj in preferred_genres
-                ]
-                UserPreferenceGenre.objects.bulk_create(user_preference_genres)
-
-            if preferred_playtime_objects:
-                user_preference_playtimes = [
-                    UserPreferencePlaytime(user=user, playtime_category=playtime_obj, created_at=datetime.now())
-                    for playtime_obj in preferred_playtime_objects
-                ]
-                UserPreferencePlaytime.objects.bulk_create(user_preference_playtimes)
 
             return user
 

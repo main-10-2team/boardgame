@@ -58,10 +58,7 @@ class GameReviewListView(APIView):
         user = cast(User, self.request.user)
 
         if not user.is_authenticated:
-            return Response(
-                {"detail": "로그인이 필요합니다."},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+            return Response({"detail": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
         if user.status != "active":
             return Response(

@@ -27,7 +27,7 @@ class IsAdminRole(IsAdminUser):
 
 # 관리자 장르 등록 API
 @extend_schema(
-    tags=["[Admin] Genre - 관리자 장르 관리"],
+    tags=["[Admin]"],
     summary="관리자 장르 등록",
     description="새로운 장르의 이름(name)을 입력받아 시스템에 등록합니다.",
     request=AdminGenreCreateSerializer,  # **[수정됨]** 시리얼라이저 이름 변경
@@ -70,7 +70,7 @@ class AdminGenreRegisterView(generics.CreateAPIView[Genre]):
 
 
 @extend_schema(
-    tags=["[Admin] Genre - 관리자 장르 관리"],
+    tags=["[Admin]"],
     summary="관리자 보드게임 장르 수정",
     description="지정된 gener_id에 해달하는 장르 레코드의 이름을 수정합니다.",
     request=AdminGenreUpdateSerializer,

@@ -3,10 +3,11 @@ from django.db import models
 
 from apps.games.models import Genre, PlaytimeCategory
 from apps.users.manage import CustomUserManager
-from apps.users.utils.account_delete_reason import AccountDeletionReasonEnum
+from core.utils.account_delete_reason import AccountDeletionReasonEnum
 
 
 class User(AbstractBaseUser):
+
     ROLE_CHOICES = [
         ("user", "User"),
         ("admin", "Admin"),
@@ -40,6 +41,31 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["nickname", "birth", "phone_number"]
     objects = CustomUserManager()
+
+    @property
+    def is_staff(self):
+        """role이 'admin'인 경우 True를 반환하여 Admin 페이지 접근을 허용"""
+        return self.role == "admin"
+
+    @property
+    def is_superuser(self):
+        """role이 'admin'인 경우 True를 반환하여 최고 관리자 권한을 부여"""
+        return self.role == "admin"
+
+    @property
+    def is_active(self):
+        """status가 'active'인 경우 True를 반환하여 계정 활성화 상태를 표시"""
+        return self.status == "active"
+
+    def has_perm(self, perm, obj=None):
+        "사용자가 특정 권한을 가지고 있는지 여부"
+        # 단순화를 위해, admin 역할이면 모든 권한을 가진다고 가정
+        return self.is_superuser
+
+    def has_module_perms(self, app_label):
+        "사용자가 특정 앱에 대한 권한을 가지고 있는지 여부"
+        # 단순화를 위해, admin 역할이면 모든 앱에 대한 권한을 가진다고 가정
+        return self.is_superuser
 
     class Meta:
         db_table = "user"

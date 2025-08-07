@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from apps.users.serializers.auth.auth_find_password_reset_serializers import (
     PasswordResetVerifySerializer,
 )
-from apps.users.utils.redis_utils import delete_restore_email_code
+from core.utils.redis_utils import delete_restore_email_code
 
 
 class PasswordResetVerifyAPIView(APIView):

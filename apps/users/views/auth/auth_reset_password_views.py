@@ -10,8 +10,8 @@ from apps.users.serializers.auth.auth_code_email_serializers import (
     EmailSendCodeSerializer,
 )
 from apps.users.tasks import send_verification_email_task
-from apps.users.utils.base62 import generate_base62_code
-from apps.users.utils.redis_utils import store_restore_email_code
+from core.utils.base62 import generate_base62_code
+from core.utils.redis_utils import store_restore_email_code
 
 
 class ResetPasswordRequestCodeAPIView(APIView):

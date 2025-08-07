@@ -13,7 +13,7 @@ from unidecode import unidecode
 
 from apps.games.models import Genre
 from apps.users.models import User
-from apps.users.utils.account_delete_reason import AccountDeletionReasonEnum
+from core.utils.account_delete_reason import AccountDeletionReasonEnum
 from core.utils.s3_file_upload import S3Uploader
 
 logger = logging.getLogger(__name__)

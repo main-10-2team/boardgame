@@ -185,9 +185,6 @@ class SignupView(APIView):
 
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             refresh = RefreshToken.for_user(user)
-
-            preferred_playtime_names = [pt.playtime_category.name for pt in user.user_preferred_playtimes.all()]
-
             response_data = {
                 "status": "success",
                 "message": "회원가입이 완료되었습니다.",

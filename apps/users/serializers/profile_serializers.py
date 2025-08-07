@@ -56,12 +56,6 @@ class UserProfileSerializer(serializers.ModelSerializer[User]):
     def get_like_count(self, obj: User) -> int:
         return obj.likes.all().count()
 
-    def get_preferred_genres(self, obj: User) -> list[str]:
-        return [genre.name for genre in obj.preferred_genres.all()]
-
-    def get_preferred_playtimes(self, obj: User) -> list[str]:
-        return [pt.name for pt in obj.preferred_playtimes.all()]
-
     def get_popular_genres(self, obj: User) -> list[str]:
         genre_qs = (
             Genre.objects.filter(genre_games__game__liked_by_users__user=obj)

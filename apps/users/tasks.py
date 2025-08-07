@@ -32,7 +32,7 @@ def clean_up_due_deletions() -> None:
     now = timezone.now()
     count = 0
 
-    reasons = AccountDeletionReason.objects.filter(
+    reasons = AccountDeletionReason.objects.filter(  # type: ignore[attr-defined]
         due_date__lte=now,
         user__isnull=False,
         user__status="deleted",

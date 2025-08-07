@@ -26,8 +26,6 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "apps.users",
-    "apps.games",
 ]
 
 THIRD_PARTY_APPS = [
@@ -40,7 +38,12 @@ THIRD_PARTY_APPS = [
     "rest_framework_simplejwt.token_blacklist",
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS
+OWNER_APPS = [
+    "apps.users",
+    "apps.games",
+]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + OWNER_APPS
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",

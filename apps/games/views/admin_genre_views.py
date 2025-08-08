@@ -53,16 +53,6 @@ class AdminGenreRegisterView(generics.CreateAPIView[Genre]):
                 {"error": "DUPLICATE_GENRE_NAME", "message": "이미 동일한 이름의 장르가 존재합니다."},
                 status=status.HTTP_409_CONFLICT,
             )
-        except ValidationError as e:
-            return Response({"error": "VALIDATION_ERROR", "message": e.detail}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response(
-                {
-                    "error": "INTERNAL_SERVER_ERROR",
-                    "message": "서버에 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
 
 
 @extend_schema(
@@ -105,16 +95,6 @@ class AdminGenreUpdateView(generics.UpdateAPIView[Genre]):
                 {"error": "DUPLICATE_GENRE_NAME", "message": "변경하려는 이름의 장르가 이미 존재합니다."},
                 status=status.HTTP_409_CONFLICT,
             )
-        except ValidationError as e:
-            return Response({"error": "VALIDATION_ERROR", "message": e.detail}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response(
-                {
-                    "error": "INTERNAL_SERVER_ERROR",
-                    "message": "서버에 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
 
 
 # 관리자 장르 목록 조회 API를 위한 커스텀 페이지네이션
@@ -148,22 +128,12 @@ class AdminGenreListView(generics.ListAPIView[Genre]):
     pagination_class = GenrePagination
 
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        try:
-            queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset())
 
-            page = self.paginate_queryset(queryset)
-            if page is not None:
-                serializer = self.get_serializer(page, many=True)
-                return self.get_paginated_response(serializer.data)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-            serializer = self.get_serializer(queryset, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            return Response(
-                {
-                    "error": "INTERNAL_SERVER_ERROR",
-                    "message": "서버에 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

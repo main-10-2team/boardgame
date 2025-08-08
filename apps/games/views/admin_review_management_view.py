@@ -5,13 +5,14 @@ from django.db.models.query import QuerySet
 from drf_spectacular.types import OpenApiTypes  # OpenApiTypes 임포트가 되어있는지 확인해주세요!
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import generics, status
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from apps.games.models import Game, Review
 from apps.games.serializers.admin_review_management_serializers import ReviewSerializer
 from apps.users.models import User
+from core.utils.permission import IsAdminRole
 
 
 @extend_schema(
@@ -90,7 +91,7 @@ from apps.users.models import User
 class AdminReviewListview(generics.ListAPIView[Review]):
 
     serializer_class = ReviewSerializer
-    permission_classes = [IsAdminUser, IsAuthenticated]
+    permission_classes = [IsAdminRole, IsAuthenticated]
     queryset = Review.objects.all().select_related("user", "game")
 
     def get_queryset(self) -> QuerySet[Review]:
@@ -225,7 +226,7 @@ class AdminReviewDeleteView(generics.DestroyAPIView[Review]):
 
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer  # 시리얼라이저는 필수 속성이므로 추가했습니다.
-    permission_classes = [IsAdminUser, IsAuthenticated]
+    permission_classes = [IsAdminRole, IsAuthenticated]
     lookup_field = "review_id"
 
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:

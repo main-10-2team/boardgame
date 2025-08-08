@@ -1,11 +1,10 @@
 from typing import Any
 
 from django.http import Http404
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,6 +15,7 @@ from apps.users.serializers.admin_user_manage_serializers import (
     UserDeactivateSerializer,
     UserSuspendSerializer,
 )
+from core.utils.permission import IsAdminRole
 
 
 @extend_schema(
@@ -26,7 +26,7 @@ from apps.users.serializers.admin_user_manage_serializers import (
 class AdminUserDetailView(generics.RetrieveAPIView[User]):
     queryset = User.objects.all()
     serializer_class = AdminUserdetailSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminRole]
     lookup_field = "user_id"
 
     def retrieve(self, request: Request, *args: list[Any], **kwargs: dict[str, Any]) -> Response:
@@ -60,16 +60,6 @@ class AdminUserDetailView(generics.RetrieveAPIView[User]):
             )
 
 
-class IsAdminRole(IsAdminUser):
-    def has_permission(self, request: Request, view: APIView) -> bool:
-        # request.user가 None이거나 인증되지 않았다면 False를 반환합니다.
-        if not request.user or not request.user.is_authenticated:
-            return False
-
-        # 'role' 필드는 User 모델에 명시적으로 정의되어 있으므로 hasattr 검사는 필요하지 않습니다.
-        return request.user.role == "admin"
-
-
 @extend_schema(
     tags=["[Admin]"],
     summary="관리자 회원 제재 (활동 정지)",
@@ -79,7 +69,7 @@ class IsAdminRole(IsAdminUser):
 # 회원 제재 (활동 정지) API
 class AdminUserSuspendView(generics.UpdateAPIView[User]):
     queryset = User.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsAdminRole]
     serializer_class = UserSuspendSerializer
     lookup_field = "user_id"
 

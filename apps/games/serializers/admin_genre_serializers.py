@@ -33,3 +33,18 @@ class AdminGenreUpdateSerializer(serializers.ModelSerializer[Genre]):
         elif not self.instance and Genre.objects.filter(name=value).exists():  # 생성 시에도 중복 체크 (방어적 코딩)
             raise serializers.ValidationError("이미 동일한 이름의 장르가 존재합니다.")
         return value
+
+
+# 관리자 장르 목록 조회 API를 위한 시리얼라이저입니다.
+class AdminGenreListSerializer(serializers.ModelSerializer[Genre]):
+
+    # 장르의 ID, 이름, 생성일시, 수정일시를 직렬화합니다.
+    id = serializers.IntegerField(source="genre_id", read_only=True)
+
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
+    updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
+
+    class Meta:
+        model = Genre
+        fields = ["id", "name", "created_at", "updated_at"]
+        read_only_fields = fields

@@ -23,8 +23,6 @@ from apps.games.views.my_review_list_view import MyReviewListView
 
 urlpatterns = [
     path("games/", GameListView.as_view(), name="game-list"),
-    path("games/search", GameSearchView.as_view(), name="game-search"),
-    path("games/filter", GameFilterView.as_view(), name="game-filter"),
     path("games/<int:game_id>", GameDetailView.as_view(), name="game-detail"),
     path("games/<int:game_id>/reviews", GameReviewListView.as_view(), name="game-review-list"),
     path("reviews/<int:review_id>patch", GameReviewPatchAPIView.as_view(), name="game-review-patch"),

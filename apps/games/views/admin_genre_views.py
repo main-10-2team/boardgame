@@ -1,10 +1,10 @@
+from pyexpat.errors import messages
 from typing import Any
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
-from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -51,6 +51,39 @@ class AdminGenreRegisterView(generics.CreateAPIView[Genre]):
         except IntegrityError:
             return Response(
                 {"error": "DUPLICATE_GENRE_NAME", "message": "이미 동일한 이름의 장르가 존재합니다."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+
+@extend_schema(
+    tags=["[Admin]"],
+    summary="관리자 장르 삭제",
+    description="지정된 genre_id에 해당하는 장르 레코드를 시스템에서 삭제합니다.",
+)
+class AdminGenreDeleteView(generics.RetrieveDestroyAPIView[Genre]):
+    queryset = Genre.objects.all()
+    permission_classes = [IsAuthenticated, IsAdminRole]
+    lookup_field = "genre_id"
+    http_method_names = ["delete"]
+
+    def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        try:
+            genre_id = self, kwargs.get(self.lookup_field)
+            instance = self.get_object()
+
+            instance.delete()
+
+            return Response({"message": "장르가 삭제 되었습니다."}, status=status.HTTP_200_OK)
+
+        except Genre.DoesNotExist:
+            return Response(
+                {"error": "NOT_FOUND", "message": f"해당 ID({genre_id})의 장르를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except IntegrityError:
+            # 외래 키 제약 조건으로 인해 삭제할 수 없는 경우
+            return Response(
+                {"error": "GENRE_IN_USE", "message": "해당 장르를 사용하는 보드 게임이 존재하여 삭제할 수 없습니다."},
                 status=status.HTTP_409_CONFLICT,
             )
 

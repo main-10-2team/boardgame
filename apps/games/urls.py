@@ -1,6 +1,7 @@
 from django.urls import path
 
 from apps.games.views.admin_genre_views import (
+    AdminGenreDeleteView,
     AdminGenreListView,
     AdminGenreRegisterView,
     AdminGenreUpdateView,
@@ -33,9 +34,10 @@ urlpatterns = [
     path("users/reviews/", MyReviewListView.as_view(), name="user-review-list"),
     path("admin/reviews/", AdminReviewListview.as_view(), name="admin-review-list"),
     path("admin/reviews/<int:review_id>/", AdminReviewDeleteView.as_view(), name="admin_review_delete"),
-    path("admin/genres/<int:genre_id>", AdminGenreUpdateView.as_view(), name="admin-genre-update"),
-    path("admin/genres/register", AdminGenreRegisterView.as_view(), name="admin-genre-register"),
     path("admin/genres/list", AdminGenreListView.as_view(), name="admin-genre-list"),
+    path("admin/genres/register", AdminGenreRegisterView.as_view(), name="admin-genre-register"),
+    path("admin/genres/<int:genre_id>", AdminGenreUpdateView.as_view(), name="admin-genre-update"),
+    path("admin/genres/delete<int:genre_id>", AdminGenreDeleteView.as_view(), name="admin-genre-delete"),
     path("likes/", LikeView.as_view(), name="like"),
     path("likes/list/", LikeListView.as_view(), name="like-list"),
     path("likes/remove/", LikeRemoveView.as_view(), name="like_remove"),

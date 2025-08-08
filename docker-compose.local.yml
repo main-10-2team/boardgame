@@ -15,8 +15,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - static_volume:/boardq/app/static
-      - media_volume:/boardq/app/media
+      - static_volume:/boardq/apps/static
+      - media_volume:/boardq/apps/media
     networks:
       - ws
     depends_on:
@@ -35,8 +35,8 @@ services:
       - django
     volumes:
       - ./resources/nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
-      - static_volume:/boardq/app/static
-      - media_volume:/boardq/app/media
+      - static_volume:/boardq/apps/static
+      - media_volume:/boardq/apps/media
     networks:
       - ws
 

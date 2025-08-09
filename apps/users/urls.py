@@ -28,15 +28,15 @@ from apps.users.views.profile_views import (
 
 from .views.auth.auth_find_id_views import FindIDAPIView
 from .views.auth.auth_find_password_reset_views import PasswordResetVerifyAPIView
-
-# from .views.preference_views import PreferenceSubmitView
+from .views.survey_views import UserSurveyChoiceView, UserSurveySubmitView
 
 urlpatterns = [
     path("profile/", UserProfileView.as_view(), name="user-profile"),
     path("profile/update/", UserProfileUpdateView.as_view(), name="user-profile-update"),
     path("profile/password/", PasswordChangeView.as_view(), name="password-change"),
     path("profile/delete/", AccountDeleteView.as_view(), name="account-delete"),
-    # path("preferences/", PreferenceSubmitView.as_view(), name="preference-submit"),
+    path("survey/choices", UserSurveyChoiceView.as_view(), name="user-survey-choices"),
+    path("survey/submit", UserSurveySubmitView.as_view(), name="user-survey-submit"),
     path("auth/signup/", SignupView.as_view(), name="signup"),
     path("auth/send-code/", SendEmailCodeView.as_view(), name="send-email-code"),
     path("auth/verify-code/", VerifyEmailCodeView.as_view(), name="verify-email-code"),

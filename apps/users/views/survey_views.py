@@ -29,42 +29,29 @@ from apps.users.serializers.survey_serializers import (
             description="비로그인 유저",
             response={
                 "type": "object",
-                "properties": {
-                    "detail": {
-                        "type": "string",
-                        "example": "자격 인증 헤더가 제공되지 않았습니다."
-                    }
-                },
-                "required": ["detail"]
-            }
+                "properties": {"detail": {"type": "string", "example": "자격 인증 헤더가 제공되지 않았습니다."}},
+                "required": ["detail"],
+            },
         ),
         403: OpenApiResponse(
             description="제재/탈퇴 유저 접근 차단",
             response={
                 "type": "object",
                 "properties": {
-                    "detail": {
-                        "type": "string",
-                        "example": "비활성화된 계정입니다. 관리자에게 문의하세요."
-                    }
+                    "detail": {"type": "string", "example": "비활성화된 계정입니다. 관리자에게 문의하세요."}
                 },
-                "required": ["detail"]
-            }
+                "required": ["detail"],
+            },
         ),
         500: OpenApiResponse(
             description="서버 내부 오류",
             response={
                 "type": "object",
-                "properties": {
-                    "detail": {
-                        "type": "string",
-                        "example": "서버 내부 오류가 발생했습니다."
-                    }
-                },
-                "required": ["detail"]
-            }
-        )
-    }
+                "properties": {"detail": {"type": "string", "example": "서버 내부 오류가 발생했습니다."}},
+                "required": ["detail"],
+            },
+        ),
+    },
 )
 class UserSurveyChoiceView(APIView):
     permission_classes = [IsAuthenticated]
@@ -81,9 +68,7 @@ class UserSurveyChoiceView(APIView):
 
         if len(candidates) < 10:
             recent = list(Game.objects.exclude(game_id__in=excluded_ids).order_by("-created_at")[:30])
-            ordered_candidate_ids = list(
-                dict.fromkeys([g.game_id for g in candidates] + [g.game_id for g in recent])
-            )
+            ordered_candidate_ids = list(dict.fromkeys([g.game_id for g in candidates] + [g.game_id for g in recent]))
         else:
             ordered_candidate_ids = [g.game_id for g in candidates]
 
@@ -109,14 +94,10 @@ class UserSurveyChoiceView(APIView):
                 "properties": {
                     "message": {"type": "string", "example": "설문이 저장되었습니다."},
                     "new_like_count": {"type": "integer", "example": 3},
-                    "liked_game_ids": {
-                        "type": "array",
-                        "items": {"type": "integer"},
-                        "example": [1, 2, 3]
-                    }
+                    "liked_game_ids": {"type": "array", "items": {"type": "integer"}, "example": [1, 2, 3]},
                 },
-                "required": ["message", "new_like_count", "liked_game_ids"]
-            }
+                "required": ["message", "new_like_count", "liked_game_ids"],
+            },
         ),
         400: OpenApiResponse(
             description="중복 또는 존재하지 않는 게임 ID 제출",
@@ -126,52 +107,39 @@ class UserSurveyChoiceView(APIView):
                     "liked_games": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "example": ["존재하지 않는 게임 ID: [9999]", "중복된 게임 ID가 포함되어 있습니다."]
+                        "example": ["존재하지 않는 게임 ID: [9999]", "중복된 게임 ID가 포함되어 있습니다."],
                     }
                 },
-                "required": ["detail"]
-            }
+                "required": ["detail"],
+            },
         ),
         401: OpenApiResponse(
             description="비로그인 유저",
             response={
                 "type": "object",
-                "properties": {
-                    "detail": {
-                        "type": "string",
-                        "example": "자격 인증 헤더가 제공되지 않았습니다."
-                    }
-                },
-                "required": ["detail"]
-            }
+                "properties": {"detail": {"type": "string", "example": "자격 인증 헤더가 제공되지 않았습니다."}},
+                "required": ["detail"],
+            },
         ),
         403: OpenApiResponse(
             description="제재/탈퇴 유저 접근 차단",
             response={
                 "type": "object",
                 "properties": {
-                    "detail": {
-                        "type": "string",
-                        "example": "비활성화된 계정입니다. 관리자에게 문의하세요."
-                    }
+                    "detail": {"type": "string", "example": "비활성화된 계정입니다. 관리자에게 문의하세요."}
                 },
-                "required": ["detail"]
-            }
+                "required": ["detail"],
+            },
         ),
         500: OpenApiResponse(
             description="서버 내부 오류",
             response={
                 "type": "object",
-                "properties": {
-                    "detail": {
-                        "type": "string",
-                        "example": "서버 내부 오류가 발생했습니다."
-                    }
-                },
-                "required": ["detail"]
-            }
-        )
-    }
+                "properties": {"detail": {"type": "string", "example": "서버 내부 오류가 발생했습니다."}},
+                "required": ["detail"],
+            },
+        ),
+    },
 )
 class UserSurveySubmitView(APIView):
     permission_classes = [IsAuthenticated]

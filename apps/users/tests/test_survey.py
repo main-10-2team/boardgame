@@ -1,24 +1,29 @@
+from typing import Dict, List, cast
+
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
-from apps.games.models import Like
+
+from apps.games.models import Game, Like
 from apps.games.tests.game_samples import make_survey
+from apps.users.models import User
+
 
 class SurveyAPITestCase(TestCase):
     def setUp(self) -> None:
         self.client: APIClient = APIClient()
-        survey = make_survey(game_count=20, liked_indices=range(5))
+        survey = make_survey(game_count=30, liked_indices=range(5))
 
-
-        self.normal_user = survey["users"]["normal_user"]
-        self.suspended_user = survey["users"]["suspended_user"]
-        self.deleted_user = survey["users"]["deleted_user"]
+        users = cast(Dict[str, User], survey["users"])
+        self.normal_user = users["normal_user"]
+        self.suspended_user = users["suspended_user"]
+        self.deleted_user = users["deleted_user"]
 
         self.user = self.normal_user
         self.client.force_authenticate(user=self.user)
 
-        self.games = survey["games"]
-        self.likes = survey["likes"]
+        self.games = cast(List[Game], survey["games"])
+        self.likes = cast(List[Like], survey["likes"])
 
     def test_survey_choice_returns_game_list(self) -> None:
         url = reverse("user-survey-choices")
@@ -44,9 +49,7 @@ class SurveyAPITestCase(TestCase):
 
         data = response.json()
         returned_ids = {g["game_id"] for g in data["games"]}
-        already_liked_ids = set(
-            Like.objects.filter(user=self.user).values_list("game__game_id", flat=True)
-        )
+        already_liked_ids = set(Like.objects.filter(user=self.user).values_list("game__game_id", flat=True))
         self.assertTrue(returned_ids.isdisjoint(already_liked_ids))
 
     def test_survey_submit_creates_likes(self) -> None:

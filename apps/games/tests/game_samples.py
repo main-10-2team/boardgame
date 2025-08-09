@@ -1,11 +1,19 @@
-from typing import Sequence, Iterable, Dict
+from typing import Dict, Iterable, List, Sequence, Union
+
 from apps.games.models import (
-    Game, Genre, Category, GameGenre, GameCategory, GameImage, Like
+    Category,
+    Game,
+    GameCategory,
+    GameGenre,
+    GameImage,
+    Genre,
+    Like,
 )
+from apps.users.models import User
 from apps.users.tests.user_samples import create_all_user_types
 
 
-def ensure_genres(genre_names: Sequence[str]):
+def ensure_genres(genre_names: Sequence[str]) -> List[Genre]:
     genres = []
     for name in genre_names:
         g, _ = Genre.objects.get_or_create(name=name)
@@ -13,7 +21,7 @@ def ensure_genres(genre_names: Sequence[str]):
     return genres
 
 
-def ensure_categories(category_names: Sequence[str]):
+def ensure_categories(category_names: Sequence[str]) -> List[Category]:
     categories = []
     for name in category_names:
         c, _ = Category.objects.get_or_create(name=name)
@@ -36,9 +44,9 @@ def create_test_game(
     like_count: int = 0,
     reviews_count: int = 0,
     average_rating: float = 0.0,
-    genre_names=("Strategy", "Family"),
-    category_names=("Card Game",),
-    detail_image_urls=(),
+    genre_names: Sequence[str] = ("Strategy", "Family"),
+    category_names: Sequence[str] = ("Card Game",),
+    detail_image_urls: Sequence[str] = (),
 ) -> Game:
     game = Game.objects.create(
         title=title,
@@ -68,7 +76,7 @@ def create_test_game(
     return game
 
 
-def create_many_games(count: int = 30):
+def create_many_games(count: int = 30) -> List[Game]:
     games = []
     for i in range(count):
         games.append(
@@ -94,18 +102,17 @@ def create_many_games(count: int = 30):
     return games
 
 
-def seed_likes(user, games, like_indices):
+def seed_likes(user: User, games: Sequence[Game], like_indices: Iterable[int]) -> List[Like]:
     likes = [Like(user=user, game=games[idx]) for idx in like_indices]
     Like.objects.bulk_create(likes)
     return likes
 
 
-def make_survey(game_count=20, liked_indices=range(5)) -> Dict[str, object]:
-    users = create_all_user_types()
-    games = create_many_games(game_count)
-    likes = seed_likes(users["normal_user"], games, liked_indices)
-    return {
-        "users": users,  # dict
-        "games": games,  # list[Game]
-        "likes": likes  # list[Like]
-    }
+def make_survey(
+    game_count: int = 30,
+    liked_indices: Iterable[int] = range(5),
+) -> dict[str, object]:
+    users: Dict[str, User] = create_all_user_types()
+    games: List[Game] = create_many_games(game_count)
+    likes: List[Like] = seed_likes(users["normal_user"], games, liked_indices)
+    return {"users": users, "games": games, "likes": likes}

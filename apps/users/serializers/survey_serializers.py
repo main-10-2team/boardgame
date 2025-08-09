@@ -32,7 +32,7 @@ class SurveySubmitSerializer(serializers.Serializer[Dict[str, Any]]):
 
         invalid_ids = survey_ids - valid_ids
         if invalid_ids:
-            raise serializers.ValidationError({"detail": "존재하지 않는 게임 ID - {sorted(invalid_ids)}"})
+            raise serializers.ValidationError({"detail": f"존재하지 않는 게임 ID - {sorted(invalid_ids)}"})
 
         return list(survey_ids)
 

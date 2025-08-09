@@ -20,4 +20,4 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # 비밀번호 검증 속도 빠르게
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
-    ]
+]

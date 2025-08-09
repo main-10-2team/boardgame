@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict
-from datetime import timedelta
+
 from django.utils import timezone
 
 from apps.users.models import User
+
 
 # 유저 하나 생성
 def create_test_user(
@@ -37,6 +38,7 @@ def create_test_user(
     user.suspended_until = suspended_until
     user.save()
     return user
+
 
 # 테스트용 유저 4개 생성
 def create_all_user_types() -> Dict[str, User]:
@@ -95,5 +97,5 @@ def create_all_user_types() -> Dict[str, User]:
             role="user",
             status="deleted",
             suspended_until=None,
-        )
+        ),
     }

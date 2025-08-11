@@ -25,7 +25,7 @@ class User(AbstractBaseUser):
     profile_image = models.URLField(null=True, blank=True)
     review_count = models.PositiveSmallIntegerField(default=0)
     like_count = models.PositiveSmallIntegerField(default=0)
-    birth = models.DateTimeField(null=False)
+    birth = models.DateField(null=False)
     phone_number = models.CharField(max_length=20, null=False)
     role = models.CharField(max_length=5, choices=ROLE_CHOICES, default="user")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="active")

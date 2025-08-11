@@ -5,6 +5,26 @@ from rest_framework import serializers
 from apps.games.models import Review
 
 
+class MyReviewListQuerySerializer(serializers.Serializer[Any]):
+    page = serializers.IntegerField(required=False, default=1)
+    limit = serializers.IntegerField(required=False, default=10)
+
+    def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
+        page = attrs.get("page", 1)
+        limit = attrs.get("limit", 10)
+
+        if page is None or page < 1:
+            page = 1
+        if limit is None or limit < 1:
+            limit = 1
+        elif limit > 10:
+            limit = 10
+
+        attrs["page"] = page
+        attrs["limit"] = limit
+        return attrs
+
+
 class MyReviewListSerializer(serializers.ModelSerializer[Review]):
     game_id = serializers.IntegerField(source="game.game_id", read_only=True)
     title = serializers.CharField(source="game.title", read_only=True)

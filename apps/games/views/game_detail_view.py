@@ -1,6 +1,12 @@
 from typing import Any
 
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+)
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
@@ -21,20 +27,30 @@ class GameDetailView(APIView):
     @extend_schema(
         summary="게임 상세 조회",
         description="특정 게임의 상세 정보를 조회합니다.",
+        tags=["게임"],
         parameters=[
             OpenApiParameter(
                 name="game_id",
                 description="조회할 게임의 고유 ID",
                 required=True,
-                type=int,
-                location="path",
-            )
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            ),
         ],
         responses={
             200: GameDetailSerializer,
-            404: OpenApiParameter(name="detail", description="게임을 찾을 수 없습니다.", required=False, type=str),
+            404: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="Not Found",
+                examples=[
+                    OpenApiExample(
+                        name="NotFound",
+                        value={"detail": "게임을 찾을 수 없습니다."},
+                        response_only=True,
+                    )
+                ],
+            ),
         },
-        tags=["게임"],
     )
     def get(self, request: Request, game_id: int, *args: Any, **kwargs: Any) -> Response:
         try:

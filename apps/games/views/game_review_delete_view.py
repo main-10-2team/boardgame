@@ -1,7 +1,13 @@
 from typing import cast
 
 from django.db.models import Avg
-from drf_spectacular.utils import OpenApiExample, extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+)
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -24,26 +30,47 @@ class GameReviewDeleteAPIView(APIView):
     @extend_schema(
         summary="리뷰 삭제",
         tags=["게임 리뷰"],
-        description="""로그인한 사용자가 본인이 작성한 리뷰를 삭제합니다.""",
+        description="로그인한 사용자가 본인이 작성한 리뷰를 삭제합니다.",
+        parameters=[
+            OpenApiParameter(
+                name="review_id",
+                type=OpenApiTypes.INT,
+                location="path",
+                description="리뷰 ID",
+                required=True,
+            )
+        ],
         responses={
             200: ReviewDeleteResponseSerializer,
-            401: OpenApiExample(
-                "인증 에러",
-                value={"detail": "인증 토큰이 유효하지 않습니다."},
-                response_only=True,
-                status_codes=["401"],
+            401: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                examples=[
+                    OpenApiExample(
+                        "인증 에러",
+                        value={"detail": "인증 토큰이 유효하지 않습니다."},
+                        response_only=True,
+                    )
+                ],
             ),
-            403: OpenApiExample(
-                "권한 없음 에러",
-                value={"detail": "본인의 리뷰만 삭제할 수 있습니다."},
-                response_only=True,
-                status_codes=["403"],
+            403: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                examples=[
+                    OpenApiExample(
+                        "권한 없음 에러",
+                        value={"detail": "본인의 리뷰만 삭제할 수 있습니다."},
+                        response_only=True,
+                    )
+                ],
             ),
-            404: OpenApiExample(
-                "리뷰를 찾을 수 없음 에러",
-                value={"detail": "리뷰를 찾을 수 없습니다."},
-                response_only=True,
-                status_codes=["404"],
+            404: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                examples=[
+                    OpenApiExample(
+                        "리뷰를 찾을 수 없음 에러",
+                        value={"detail": "리뷰를 찾을 수 없습니다."},
+                        response_only=True,
+                    )
+                ],
             ),
         },
     )

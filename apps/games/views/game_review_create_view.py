@@ -2,8 +2,13 @@ from typing import Any, cast
 
 from django.db.models import Avg
 from django.utils.timezone import now
-from drf_spectacular.utils import OpenApiExample, extend_schema
-from rest_framework import status
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiResponse,
+    extend_schema,
+    inline_serializer,
+)
+from rest_framework import serializers, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -27,40 +32,51 @@ class GameReviewCreateView(APIView):
     @extend_schema(
         summary="리뷰 작성",
         description="로그인한 사용자가 특정 게임에 대한 리뷰를 작성합니다.",
-        request=GameReviewCreateSerializer,
         tags=["게임 리뷰"],
+        request=GameReviewCreateSerializer,
         responses={
-            201: OpenApiExample(
-                "성공 응답",
-                value={
-                    "status": "success",
-                    "message": "리뷰가 성공적으로 작성되었습니다.",
-                    "game_id": 123,
-                    "review": {
-                        "review_id": 1,
-                        "user_id": 1,
-                        "nickname": "BoardGameFan",
-                        "rating": 4.5,
-                        "content": "정말 재미있는 게임! 전략적인 요소가 강력함.",
-                        "created_at": "2025-07-23T15:53:00Z",
-                    },
-                    "updated_average_rating": 4.25,
-                    "refresh_page": True,
-                },
-                response_only=True,
-                status_codes=["201"],
+            # ✅ 예시는 OpenApiResponse 안의 examples로
+            201: OpenApiResponse(
+                response=GameReviewCreateResponseSerializer,
+                examples=[
+                    OpenApiExample(
+                        name="성공 응답",
+                        value={
+                            "status": "success",
+                            "message": "리뷰가 성공적으로 작성되었습니다.",
+                            "game_id": 123,
+                            "review": {
+                                "review_id": 1,
+                                "user_id": 1,
+                                "nickname": "BoardGameFan",
+                                "rating": 4.5,
+                                "content": "정말 재미있는 게임! 전략적인 요소가 강력함.",
+                                "created_at": "2025-07-23T15:53:00Z",
+                            },
+                            "updated_average_rating": 4.25,
+                            "refresh_page": True,
+                        },
+                        response_only=True,
+                    )
+                ],
             ),
-            400: OpenApiExample(
-                "중복 리뷰 에러",
-                value={"detail": "리뷰가 이미 존재합니다."},
-                response_only=True,
-                status_codes=["400"],
+            400: OpenApiResponse(
+                response=inline_serializer(
+                    name="GameReviewCreateBadRequest",
+                    fields={"detail": serializers.CharField()},
+                ),
+                examples=[
+                    OpenApiExample("중복 리뷰 에러", value={"detail": "리뷰가 이미 존재합니다."}, response_only=True)
+                ],
             ),
-            401: OpenApiExample(
-                "인증 에러",
-                value={"detail": "인증 토큰이 유효하지 않습니다."},
-                response_only=True,
-                status_codes=["401"],
+            401: OpenApiResponse(
+                response=inline_serializer(
+                    name="UnauthorizedError",
+                    fields={"detail": serializers.CharField()},
+                ),
+                examples=[
+                    OpenApiExample("인증 에러", value={"detail": "인증 토큰이 유효하지 않습니다."}, response_only=True)
+                ],
             ),
         },
     )

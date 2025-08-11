@@ -1,7 +1,13 @@
 from typing import Any, cast
 
 from django.core.paginator import EmptyPage, Paginator
-from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+)
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -45,11 +51,16 @@ class MyReviewListView(APIView):
         responses={
             200: MyReviewListResponseSerializer,
             400: MyReviewListErrorSerializer,
-            401: OpenApiExample(
-                "Unauthorized",
-                value={"detail": "인증 토큰이 유효하지 않습니다."},
-                response_only=True,
-                status_codes=["401"],
+            401: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="Unauthorized",
+                examples=[
+                    OpenApiExample(
+                        name="Unauthorized",
+                        value={"detail": "인증 토큰이 유효하지 않습니다."},
+                        response_only=True,
+                    )
+                ],
             ),
             404: MyReviewListErrorSerializer,
         },

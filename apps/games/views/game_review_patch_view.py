@@ -1,11 +1,15 @@
 from typing import cast
 
-from django.db.models import Avg
-from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
-from rest_framework import status
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiResponse,
+    extend_schema,
+    inline_serializer,
+)
+from rest_framework import serializers, status
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,13 +17,14 @@ from rest_framework.views import APIView
 from apps.games.models import Review
 from apps.games.serializers.game_review_patch_serializer import (
     GameReviewPatchRequestSerializer,
-    ReviewPatchResponseReviewSerializer,
 )
 from apps.users.models import User
 
+unauth_schema = inline_serializer(name="UnauthorizedError_GameReviewPatch", fields={"detail": serializers.CharField()})
+
 
 class GameReviewPatchAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     parser_classes = [MultiPartParser, FormParser]
 
     @extend_schema(
@@ -28,49 +33,74 @@ class GameReviewPatchAPIView(APIView):
         tags=["게임 리뷰"],
         request=GameReviewPatchRequestSerializer,
         responses={
-            200: OpenApiExample(
-                "성공 응답",
-                value={
-                    "status": "success",
-                    "message": "리뷰가 성공적으로 수정되었습니다.",
-                    "review": {
-                        "review_id": 1,
-                        "game_id": 123,
-                        "user_id": 1,
-                        "nickname": "BoardGameFan",
-                        "rating": 4.0,
-                        "content": "수정된 리뷰: 전략이 더 깊이 있는 게임임!",
-                        "created_at": "2025-07-23T15:00:00Z",
-                        "updated_at": "2025-07-23T16:21:00Z",
+            200: OpenApiResponse(
+                response=inline_serializer(
+                    name="GameReviewPatchSuccess",
+                    fields={
+                        "status": serializers.CharField(),
+                        "message": serializers.CharField(),
+                        "review": inline_serializer(
+                            name="PatchedReview",
+                            fields={
+                                "review_id": serializers.IntegerField(),
+                                "game_id": serializers.IntegerField(),
+                                "user_id": serializers.IntegerField(),
+                                "nickname": serializers.CharField(),
+                                "rating": serializers.FloatField(),
+                                "content": serializers.CharField(),
+                                "created_at": serializers.DateTimeField(),
+                                "updated_at": serializers.DateTimeField(),
+                            },
+                        ),
+                        "updated_average_rating": serializers.FloatField(),
                     },
-                    "updated_average_rating": 4.30,
-                },
-                response_only=True,
-                status_codes=["200"],
+                ),
+                examples=[
+                    OpenApiExample(
+                        name="성공 응답",
+                        value={
+                            "status": "success",
+                            "message": "리뷰가 성공적으로 수정되었습니다.",
+                            "review": {
+                                "review_id": 1,
+                                "game_id": 123,
+                                "user_id": 1,
+                                "nickname": "BoardGameFan",
+                                "rating": 4.0,
+                                "content": "수정된 리뷰: 전략이 더 깊이 있는 게임임!",
+                                "created_at": "2025-07-23T15:00:00Z",
+                                "updated_at": "2025-07-23T16:21:00Z",
+                            },
+                            "updated_average_rating": 4.30,
+                        },
+                        response_only=True,
+                    )
+                ],
             ),
-            400: OpenApiExample(
-                "잘못된 요청 에러",
-                value={"detail": "유효하지 않은 평점입니다."},
-                response_only=True,
-                status_codes=["400"],
+            401: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="Unauthorized",
+                examples=[
+                    OpenApiExample(
+                        "Unauthorized", value={"detail": "인증 토큰이 유효하지 않습니다."}, response_only=True
+                    )
+                ],
             ),
-            401: OpenApiExample(
-                "인증 에러",
-                value={"detail": "JWT 토큰이 유효하지 않거나 만료된 경우"},
-                response_only=True,
-                status_codes=["401"],
+            403: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="Forbidden",
+                examples=[
+                    OpenApiExample(
+                        "Forbidden", value={"detail": "본인의 리뷰만 수정할 수 있습니다."}, response_only=True
+                    )
+                ],
             ),
-            403: OpenApiExample(
-                "권한 없음 에러",
-                value={"detail": "본인의 리뷰만 수정할 수 있습니다."},
-                response_only=True,
-                status_codes=["403"],
-            ),
-            404: OpenApiExample(
-                "리뷰를 찾을 수 없음 에러",
-                value={"detail": "리뷰를 찾을 수 없습니다."},
-                response_only=True,
-                status_codes=["404"],
+            404: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="Not Found",
+                examples=[
+                    OpenApiExample("Not Found", value={"detail": "리뷰를 찾을 수 없습니다."}, response_only=True)
+                ],
             ),
         },
     )

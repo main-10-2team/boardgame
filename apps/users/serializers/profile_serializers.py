@@ -25,8 +25,6 @@ def korean_slugify(text: str) -> str:
 
 
 class UserProfileSerializer(serializers.ModelSerializer[User]):
-    preferred_genres = serializers.SerializerMethodField()
-    preferred_playtimes = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     popular_genres = serializers.SerializerMethodField()
@@ -43,8 +41,6 @@ class UserProfileSerializer(serializers.ModelSerializer[User]):
             "review_count",
             "like_count",
             "created_at",
-            "preferred_genres",
-            "preferred_playtimes",
             "popular_genres",
         ]
 

@@ -61,6 +61,7 @@ class AdminGenreRegisterView(generics.CreateAPIView[Genre]):
     description="지정된 genre_id에 해당하는 장르 레코드를 시스템에서 삭제합니다.",
 )
 class AdminGenreDeleteView(generics.RetrieveDestroyAPIView[Genre]):
+    serializer_class = AdminGenreListSerializer
     queryset = Genre.objects.all()
     permission_classes = [IsAuthenticated, IsAdminRole]
     lookup_field = "genre_id"

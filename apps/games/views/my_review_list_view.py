@@ -1,7 +1,12 @@
 from typing import Any, cast
 
 from django.core.paginator import EmptyPage, Paginator
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+)
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -12,6 +17,7 @@ from rest_framework.views import APIView
 from apps.games.models import Review
 from apps.games.serializers.my_review_list_serializer import (
     MyReviewListErrorSerializer,
+    MyReviewListQuerySerializer,
     MyReviewListResponseSerializer,
     MyReviewListSerializer,
 )
@@ -27,10 +33,20 @@ class MyReviewListView(APIView):
         tags=["게임 리뷰"],
         description="로그인한 사용자가 자신이 작성한 리뷰 목록을 조회합니다.",
         parameters=[
-            OpenApiParameter(name="page", type=int, location=OpenApiParameter.QUERY, required=False,
-                             description="페이지 번호 (기본 1)"),
-            OpenApiParameter(name="limit", type=int, location=OpenApiParameter.QUERY, required=False,
-                             description="페이지당 리뷰 수 (기본 10, 최대 10)"),
+            OpenApiParameter(
+                name="page",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="페이지 번호 (기본 1)",
+            ),
+            OpenApiParameter(
+                name="limit",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="페이지당 리뷰 수 (기본 10, 최대 10)",
+            ),
         ],
         responses={
             200: MyReviewListResponseSerializer,
@@ -48,21 +64,17 @@ class MyReviewListView(APIView):
                         response_only=True,
                     )
                 ],
-            ),  # ← ✅ 여기 콤마 필수
+            ),
             404: MyReviewListErrorSerializer,
         },
     )
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = cast(User, request.user)
 
-        try:
-            page = int(request.query_params.get("page", 1))
-            limit = min(int(request.query_params.get("limit", 10)), 10)
-        except ValueError:
-            return Response(
-                {"detail": MyReviewListErrorSerializer.error_messages["invalid_page"]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        qp = MyReviewListQuerySerializer(data=request.query_params)
+        qp.is_valid(raise_exception=True)
+        page = qp.validated_data["page"]
+        limit = qp.validated_data["limit"]
 
         reviews = Review.objects.select_related("game").filter(user=user).order_by("-created_at")
 
@@ -81,4 +93,8 @@ class MyReviewListView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-
+        response_serializer = MyReviewListResponseSerializer(
+            page_obj,
+            context={"page": page, "limit": limit, "paginator": paginator},
+        )
+        return Response(response_serializer.data, status=status.HTTP_200_OK)

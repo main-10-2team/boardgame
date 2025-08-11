@@ -1,13 +1,7 @@
 from typing import Any, cast
 
 from django.core.paginator import EmptyPage, Paginator
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import (
-    OpenApiExample,
-    OpenApiParameter,
-    OpenApiResponse,
-    extend_schema,
-)
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -33,27 +27,20 @@ class MyReviewListView(APIView):
         tags=["게임 리뷰"],
         description="로그인한 사용자가 자신이 작성한 리뷰 목록을 조회합니다.",
         parameters=[
-            OpenApiParameter(
-                name="page",
-                type=int,
-                location=OpenApiParameter.QUERY,
-                required=False,
-                description="조회할 페이지 번호 (기본값: 1)",
-            ),
-            OpenApiParameter(
-                name="limit",
-                type=int,
-                location=OpenApiParameter.QUERY,
-                required=False,
-                description="페이지당 리뷰 수 (기본값: 10, 최대: 10)",
-            ),
+            OpenApiParameter(name="page", type=int, location=OpenApiParameter.QUERY, required=False,
+                             description="페이지 번호 (기본 1)"),
+            OpenApiParameter(name="limit", type=int, location=OpenApiParameter.QUERY, required=False,
+                             description="페이지당 리뷰 수 (기본 10, 최대 10)"),
         ],
         responses={
             200: MyReviewListResponseSerializer,
             400: MyReviewListErrorSerializer,
             401: OpenApiResponse(
-                response=OpenApiTypes.OBJECT,
-                description="Unauthorized",
+                response={
+                    "type": "object",
+                    "properties": {"detail": {"type": "string"}},
+                    "required": ["detail"],
+                },
                 examples=[
                     OpenApiExample(
                         name="Unauthorized",
@@ -61,23 +48,12 @@ class MyReviewListView(APIView):
                         response_only=True,
                     )
                 ],
-            ),
+            ),  # ← ✅ 여기 콤마 필수
             404: MyReviewListErrorSerializer,
         },
     )
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = cast(User, request.user)
-
-        if not user.is_authenticated:
-            return Response(
-                {"detail": "로그인이 필요합니다."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        if user.status != "active":
-            return Response(
-                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
-            )
 
         try:
             page = int(request.query_params.get("page", 1))
@@ -105,8 +81,4 @@ class MyReviewListView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        response_serializer = MyReviewListResponseSerializer(
-            page_obj, context={"page": page, "limit": limit, "paginator": paginator}
-        )
 
-        return Response(response_serializer.data, status=status.HTTP_200_OK)

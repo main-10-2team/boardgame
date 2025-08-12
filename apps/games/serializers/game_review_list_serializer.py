@@ -1,25 +1,38 @@
-from typing import Any
+from typing import Any, Optional
 
 from rest_framework import serializers
 
 from apps.games.models import Game, Review
+from config.settings.base import NCP_ENDPOINT_URL, NCP_STORAGE_BUCKET_NAME
+
+
+def get_profile_image_url(obj: Review) -> Optional[str]:
+    if not obj.user.profile_image:
+        return None
+    base_url = NCP_ENDPOINT_URL
+    bucket_name = NCP_STORAGE_BUCKET_NAME
+    return f"{base_url}/{bucket_name}/{obj.user.profile_image}"
 
 
 class ReviewListSerializer(serializers.ModelSerializer[Review]):
-    nickname = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
 
     class Meta:
         model = Review
         fields = [
             "review_id",
-            "nickname",
+            "user",
             "rating",
             "content",
             "created_at",
         ]
 
-    def get_nickname(self, obj: Review) -> str:
-        return obj.user.nickname
+    def get_user(self, obj: Review) -> dict[str, Any]:
+        return {
+            "user_id": obj.user.user_id,
+            "nickname": obj.user.nickname,
+            "profile_image_url": get_profile_image_url(obj),
+        }
 
 
 class GameReviewListResponseSerializer(serializers.Serializer[Any]):
@@ -48,9 +61,12 @@ class GameReviewListResponseSerializer(serializers.Serializer[Any]):
         return attrs
 
     def get_response_data(self) -> dict[str, Any]:
+        request = self.context.get("request")
         game_id = self.validated_data["game_id"]
         page = self.validated_data["page"]
         limit = self.validated_data["limit"]
+
+        game = Game.objects.only("title", "thumbnail_url").get(game_id=game_id)
 
         reviews_qs = Review.objects.filter(game_id=game_id).select_related("user").order_by("-created_at")
         total_reviews = reviews_qs.count()
@@ -65,11 +81,13 @@ class GameReviewListResponseSerializer(serializers.Serializer[Any]):
 
         offset = (page - 1) * limit
         reviews_page = reviews_qs[offset : offset + limit]
-        reviews_data = ReviewListSerializer(reviews_page, many=True).data
+        reviews_data = ReviewListSerializer(reviews_page, many=True, context={"request": request}).data
 
         return {
             "status": "success",
             "game_id": game_id,
+            "title": game.title,
+            "thumbnail_url": game.thumbnail_url,
             "total_reviews": total_reviews,
             "page": page,
             "limit": limit,

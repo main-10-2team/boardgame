@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.games.views.admin_boardgame_view import AdminGameRegisterView
 from apps.games.views.admin_genre_views import (
     AdminGenreDeleteView,
     AdminGenreListView,
@@ -37,4 +38,5 @@ urlpatterns = [
     path("likes/", LikeView.as_view(), name="like"),
     path("likes/list/", LikeListView.as_view(), name="like-list"),
     path("likes/remove/", LikeRemoveView.as_view(), name="like_remove"),
+    path("admin/game", AdminGameRegisterView.as_view(), name="admin-game-register"),
 ]

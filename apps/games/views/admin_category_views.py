@@ -166,11 +166,3 @@ class AdminCategoryDeleteView(generics.DestroyAPIView[Category]):
                 {"error": "NOT_FOUND", "message": f"해당 ID({category_id_raw})의 카테고리를 찾을 수 없습니다."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        except Exception as e:
-            return Response(
-                {
-                    "error": "INTERNAL_SERVER_ERROR",
-                    "message": "서버에 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )

@@ -1,6 +1,12 @@
 from django.urls import path
 
-from apps.games.views.admin_boardgame_view import AdminGameRegisterView
+from apps.games.views.admin_boardgame_views import AdminGameRegisterView
+from apps.games.views.admin_category_views import (
+    AdminCategoryCreateView,
+    AdminCategoryDeleteView,
+    AdminCategoryListView,
+    AdminCategoryUpdateView,
+)
 from apps.games.views.admin_genre_views import (
     AdminGenreDeleteView,
     AdminGenreListView,
@@ -39,4 +45,8 @@ urlpatterns = [
     path("likes/list/", LikeListView.as_view(), name="like-list"),
     path("likes/remove/", LikeRemoveView.as_view(), name="like_remove"),
     path("admin/game", AdminGameRegisterView.as_view(), name="admin-game-register"),
+    path("admin/categories/Create", AdminCategoryCreateView.as_view(), name="admin-category-create"),
+    path("admin/categories/List", AdminCategoryListView.as_view(), name="admin-category-list"),
+    path("admin/categories/Update/<int:category_id>", AdminCategoryUpdateView.as_view(), name="admin-category-update"),
+    path("admin/categories/Delete/<int:category_id>", AdminCategoryDeleteView.as_view(), name="admin-category-delete"),
 ]

@@ -58,17 +58,15 @@ class GameListView(APIView):
             "review": "-reviews_count",
         }
         queryset = queryset.order_by(sort_fields.get(sort_by, "-like_count"))
-
-        queryset = queryset.annotate(
-            is_liked_by_user=Exists(Like.objects.filter(user_id=user.user_id, game=OuterRef("pk")))
-        )
+        if user.is_authenticated:
+            queryset = queryset.annotate(
+                is_liked_by_user=Exists(Like.objects.filter(user_id=user.user_id, game=OuterRef("pk")))
+            )
 
         genre_rankings = {}
         for genre in Genre.objects.all():
             genre_games = Game.objects.filter(game_genres__genre=genre).order_by("-like_count")[:5]
-            genre_games = genre_games.annotate(
-                is_liked_by_user=Exists(Like.objects.filter(user_id=user.user_id, game=OuterRef("pk")))
-            )
+            genre_games = genre_games.annotate(is_liked_by_user=Exists(Like.objects.filter(game=OuterRef("pk"))))
             genre_rankings[genre.name] = self.serializer_class(
                 genre_games, many=True, context={"request": request}
             ).data
@@ -76,14 +74,13 @@ class GameListView(APIView):
         category_rankings = {}
         for category in Category.objects.all():
             category_games = Game.objects.filter(categories__in=[category]).order_by("-like_count")[:5]
-            category_games = category_games.annotate(
-                is_liked_by_user=Exists(Like.objects.filter(user_id=user.user_id, game=OuterRef("pk")))
-            )
+            category_games = category_games.annotate(is_liked_by_user=Exists(Like.objects.filter(game=OuterRef("pk"))))
             category_rankings[category.name] = self.serializer_class(
                 category_games, many=True, context={"request": request}
             ).data
 
         paginator = PageNumberPagination()
+        paginator.page_size = 12
         paginator.page_size_query_param = "page_size"
         page = paginator.paginate_queryset(queryset, request, view=self)
 

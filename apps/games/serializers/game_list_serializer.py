@@ -7,49 +7,43 @@ from apps.games.models import Game, Like
 
 
 class GameListSerializer(serializers.ModelSerializer[Game]):
-    game_id = serializers.IntegerField(source="pk")
-    genre_name = serializers.SerializerMethodField()
-    category_name = serializers.SerializerMethodField()
-    play_time = serializers.SerializerMethodField()
+    genre = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
-    image_url = serializers.URLField(source="thumbnail_url", read_only=True)
 
     class Meta:
         model = Game
         fields = [
             "game_id",
             "title",
-            "description",
             "thumbnail_url",
-            "image_url",
-            "rules_url",
-            "age",
-            "min_players",
-            "max_players",
-            "playtime_min_minutes",
-            "playtime_max_minutes",
-            "play_time",
             "difficulty",
             "average_rating",
             "like_count",
             "reviews_count",
-            "created_at",
-            "updated_at",
-            "genre_name",
-            "category_name",
+            "genre",
+            "category",
             "is_liked",
         ]
 
-    def get_genre_name(self, obj: Game) -> str:
+    def get_genre(self, obj: Game) -> str:
         return ", ".join([genre.name for genre in obj.genres.all()])
 
-    def get_category_name(self, obj: Game) -> str:
+    def get_category(self, obj: Game) -> str:
         return ", ".join([cat.name for cat in obj.categories.all()])
 
-    def get_play_time(self, obj: Game) -> str:
-        if obj.playtime_min_minutes == obj.playtime_max_minutes:
-            return f"{obj.playtime_min_minutes}분"
-        return f"{obj.playtime_min_minutes}-{obj.playtime_max_minutes}분"
+    # def get_play_time(self, obj: Game) -> str:
+    #     if obj.playtime_min_minutes == obj.playtime_max_minutes:
+    #         return f"{obj.playtime_min_minutes}분"
+    #     return f"{obj.playtime_min_minutes}-{obj.playtime_max_minutes}분"
+
+    def get_difficulty(self, obj: Game) -> str:  # 👈 여기 추가
+        if obj.difficulty < 2.0:
+            return "쉬움"
+        elif obj.difficulty < 4.0:
+            return "중급"
+        else:
+            return "어려움"
 
     def get_is_liked(self, obj: Game) -> bool:
         request = self.context.get("request")
@@ -94,13 +88,11 @@ class GameFilterSerializer(serializers.Serializer[Any]):
                 low, high = diff_map[difficulty]
                 queryset = queryset.filter(difficulty__gte=low, difficulty__lt=high)
             else:
-                try:
-                    p = float(difficulty)
-                    queryset = queryset.filter(difficulty__gte=p - 0.5, difficulty__lte=p + 0.5)
-                except ValueError:
-                    raise serializers.ValidationError(
-                        {"difficulty": "난이도는 '쉬움', '중급', '어려움' 또는 숫자입니다."}
-                    )
+                # try:
+                #     p = float(difficulty)
+                #     queryset = queryset.filter(difficulty__gte=p - 0.5, difficulty__lte=p + 0.5)
+                # except ValueError:
+                raise serializers.ValidationError({"difficulty": "난이도는 '쉬움', '중급', '어려움' 또는 숫자입니다."})
 
         genres = data.get("genres")
         if genres:

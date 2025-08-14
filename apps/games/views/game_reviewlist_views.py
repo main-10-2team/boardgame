@@ -57,12 +57,10 @@ class GameReviewListView(APIView):
     def get(self, request: Request, game_id: int, *args: Any, **kwargs: Any) -> Response:
         user = cast(User, self.request.user)
 
-        if not user.is_authenticated:
-            return Response({"detail": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        if user.status != "active":
+        if user.is_authenticated and getattr(user, "status", "active") != "active":
             return Response(
-                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "비활성화된 계정입니다. 관리자에게 문의하세요."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         data = {

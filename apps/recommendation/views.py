@@ -9,7 +9,11 @@ from rest_framework.views import APIView
 
 from apps.users.models import User
 
-from .serializers import RecommendationSerializer, RecommendationResponseSerializer, RecommendedGameSerializer
+from .serializers import (
+    RecommendationResponseSerializer,
+    RecommendationSerializer,
+    RecommendedGameSerializer,
+)
 
 
 @extend_schema(

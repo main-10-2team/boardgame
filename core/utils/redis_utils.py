@@ -159,7 +159,7 @@ def get_vector_redis_connection() -> Optional[Redis]:
     try:
         host = os.getenv("REDIS_HOST", "localhost")
         port = int(os.getenv("REDIS_PORT", 6379))
-        redis_conn = Redis(host=host, port=port, db=0, decode_responses=False)
+        redis_conn: Redis = Redis(host=host, port=port, db=0, decode_responses=False)
         redis_conn.ping()
         return redis_conn
     except Exception:

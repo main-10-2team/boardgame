@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class RecommendedGameSerializer(serializers.ModelSerializer[Game]):
+    genre = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+    difficulty = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = Game
@@ -23,12 +27,37 @@ class RecommendedGameSerializer(serializers.ModelSerializer[Game]):
             "average_rating",
             "reviews_count",
             "like_count",
+            "genre",
+            "category",
+            "is_liked",
         ]
+
+    def get_genre(self, obj: Game) -> str | None:
+        first_genre = obj.genres.first()
+        return first_genre.name if first_genre else None
+
+    def get_category(self, obj: Game) -> str | None:
+        first_category = obj.categories.first()
+        return first_category.name if first_category else None
+
+    def get_difficulty(self, obj: Game) -> str:
+        if obj.difficulty < 2.0:
+            return "쉬움"
+        elif obj.difficulty < 4.0:
+            return "중급"
+        else:
+            return "어려움"
+
+    def get_is_liked(self, obj: Game) -> bool:
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return Like.objects.filter(user=request.user, game=obj).exists()
 
 
 class RecommendationResponseSerializer(serializers.Serializer[Any]):
     message = serializers.CharField()
-    data = RecommendedGameSerializer(many=True)
+    data = RecommendedGameSerializer(many=True)  # type: ignore
 
 
 class RecommendationSerializer(serializers.Serializer[Any]):
@@ -89,12 +118,36 @@ class RecommendationSerializer(serializers.Serializer[Any]):
             fallback_games = Game.objects.order_by("-created_at")[:10]
         return list(fallback_games)
 
-    def _get_vector_recommendations(self, redis_conn: Redis, user_vector: np.ndarray) -> list[Game]:
-        final_recommend_ids = find_similar_games(
-            redis_conn=redis_conn, user_vector=user_vector, exclude_ids=self.positive_interaction_game_ids, k=10
-        )
-        if not final_recommend_ids:
-            return []
+    def _get_vector_recommendations(self, redis_conn: Redis, user_vector: np.ndarray, k: int = 10) -> list[Game]:
 
-        recommended_games = Game.objects.filter(game_id__in=final_recommend_ids)
-        return sorted(recommended_games, key=lambda game: final_recommend_ids.index(game.game_id))
+        similar_game_ids = find_similar_games(
+            redis_conn=redis_conn,
+            user_vector=user_vector,
+            exclude_ids=self.positive_interaction_game_ids,
+            k=k,
+        )
+
+        games_map = {game.game_id: game for game in Game.objects.filter(game_id__in=similar_game_ids)}
+        recommended_games = [games_map[game_id] for game_id in similar_game_ids if game_id in games_map]
+
+        if len(recommended_games) < k:
+            num_needed = k - len(recommended_games)
+
+            exclude_ids = self.positive_interaction_game_ids.union(similar_game_ids)
+
+            fallback_games = list(
+                Game.objects.exclude(game_id__in=exclude_ids).order_by("-like_count", "-average_rating")[:num_needed]
+            )
+            recommended_games.extend(fallback_games)
+
+            if len(recommended_games) < k:
+                current_ids = {game.game_id for game in recommended_games}
+                final_exclude_ids = self.positive_interaction_game_ids.union(current_ids)
+                final_num_needed = k - len(recommended_games)
+
+                if final_num_needed > 0:
+                    newest_games = list(
+                        Game.objects.exclude(game_id__in=final_exclude_ids).order_by("-created_at")[:final_num_needed]
+                    )
+                    recommended_games.extend(newest_games)
+        return recommended_games

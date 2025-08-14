@@ -42,7 +42,17 @@ class Command(BaseCommand):
             scaler = MinMaxScaler()
 
             numerical_features = np.array(
-                [[g.age or 0, g.min_players, g.max_players, g.playtime_min_minutes,g.playtime_max_minutes ,g.difficulty] for g in games]
+                [
+                    [
+                        g.age or 0,
+                        g.min_players,
+                        g.max_players,
+                        g.playtime_min_minutes,
+                        g.playtime_max_minutes,
+                        g.difficulty,
+                    ]
+                    for g in games
+                ]
             )
             scaled_numerical_features = scaler.fit_transform(numerical_features)
 

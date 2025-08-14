@@ -13,13 +13,12 @@ from apps.games.models import Game, GameImage, Like, Review
 
 class GameDetailSerializer(serializers.ModelSerializer[Game]):
     game_id = serializers.IntegerField(source="pk", read_only=True)
-    reviews_count = serializers.IntegerField(read_only=True)
     play_time = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     # user_rated = serializers.SerializerMethodField()
     user_rating = serializers.SerializerMethodField()
-    genre_name = serializers.SerializerMethodField()
-    category_name = serializers.SerializerMethodField()
+    genre = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True)
 
@@ -40,14 +39,17 @@ class GameDetailSerializer(serializers.ModelSerializer[Game]):
             "like_count",
             "user_rating",
             "age",
-            "genre_name",
-            "category_name",
+            "genre",
+            "category",
             "created_at",
         ]
         read_only_fields = fields
 
     def get_play_time(self, obj: Game) -> str:
-        return f"{obj.playtime_min_minutes}–{obj.playtime_max_minutes}분"
+        if obj.playtime_min_minutes == obj.playtime_max_minutes:
+            return f"{obj.playtime_min_minutes}분"
+        return f"{obj.playtime_min_minutes}-{obj.playtime_max_minutes}분"
+
 
     def get_is_liked(self, obj: Game) -> bool:
         request = self.context.get("request")
@@ -71,10 +73,10 @@ class GameDetailSerializer(serializers.ModelSerializer[Game]):
                 return None
         return None
 
-    def get_genre_name(self, obj: Game) -> str:
+    def get_genre(self, obj: Game) -> str:
         return ", ".join([genre.name for genre in obj.genres.all()])
 
-    def get_category_name(self, obj: Game) -> str:
+    def get_category(self, obj: Game) -> str:
         return ", ".join([cat.name for cat in obj.categories.all()])
 
     def get_like_count(self, obj: Game) -> int:

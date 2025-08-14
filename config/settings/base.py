@@ -41,6 +41,7 @@ THIRD_PARTY_APPS = [
 OWNER_APPS = [
     "apps.users",
     "apps.games",
+    "apps.recommendation",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + OWNER_APPS
@@ -243,5 +244,9 @@ CELERY_BEAT_SCHEDULE = {
     "daily-user-deletion-cleanup": {
         "task": "apps.users.tasks.clean_up_due_deletions",
         "schedule": crontab(minute=0, hour=3),
+    },
+    "sync-games-to-redis-daily": {
+        "task": "apps.recommendation.tasks.run_sync_games_to_redis",
+        "schedule": crontab(minute=30, hour=3),
     },
 }

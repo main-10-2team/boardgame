@@ -12,6 +12,7 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("api/v1/", include("apps.games.urls"), name="games"),
     path("api/v1/", include("apps.users.urls"), name="users"),
     path("api/v1/", include("apps.users.urls"), name="signup"),
+    path("api/v1/", include("apps.recommendation.urls"), name="recommendation"),
 ]
 
 if settings.DEBUG:

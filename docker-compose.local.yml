@@ -62,14 +62,15 @@ services:
       start_period: 5s
 
   redis:
-    image: redis:latest
+    image: redis/redis-stack:latest
     container_name: redis-boardq
     ports:
       - "6379:6379"
+      - "8001:8001"
     networks:
       - ws
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: [ "CMD", "redis-cli", "ping","-p","6379" ]
       interval: 10s
       timeout: 5s
       retries: 5

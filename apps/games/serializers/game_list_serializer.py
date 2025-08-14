@@ -45,7 +45,6 @@ class GameListSerializer(serializers.ModelSerializer[Game]):
         else:
             return "어려움"
 
-
     def get_is_liked(self, obj: Game) -> bool:
         request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:
@@ -93,9 +92,7 @@ class GameFilterSerializer(serializers.Serializer[Any]):
                 #     p = float(difficulty)
                 #     queryset = queryset.filter(difficulty__gte=p - 0.5, difficulty__lte=p + 0.5)
                 # except ValueError:
-                raise serializers.ValidationError(
-                    {"difficulty": "난이도는 '쉬움', '중급', '어려움' 또는 숫자입니다."}
-                )
+                raise serializers.ValidationError({"difficulty": "난이도는 '쉬움', '중급', '어려움' 또는 숫자입니다."})
 
         genres = data.get("genres")
         if genres:

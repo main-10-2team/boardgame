@@ -66,9 +66,7 @@ class GameListView(APIView):
         genre_rankings = {}
         for genre in Genre.objects.all():
             genre_games = Game.objects.filter(game_genres__genre=genre).order_by("-like_count")[:5]
-            genre_games = genre_games.annotate(
-                is_liked_by_user=Exists(Like.objects.filter(game=OuterRef("pk")))
-            )
+            genre_games = genre_games.annotate(is_liked_by_user=Exists(Like.objects.filter(game=OuterRef("pk"))))
             genre_rankings[genre.name] = self.serializer_class(
                 genre_games, many=True, context={"request": request}
             ).data
@@ -76,9 +74,7 @@ class GameListView(APIView):
         category_rankings = {}
         for category in Category.objects.all():
             category_games = Game.objects.filter(categories__in=[category]).order_by("-like_count")[:5]
-            category_games = category_games.annotate(
-                is_liked_by_user=Exists(Like.objects.filter(game=OuterRef("pk")))
-            )
+            category_games = category_games.annotate(is_liked_by_user=Exists(Like.objects.filter(game=OuterRef("pk"))))
             category_rankings[category.name] = self.serializer_class(
                 category_games, many=True, context={"request": request}
             ).data

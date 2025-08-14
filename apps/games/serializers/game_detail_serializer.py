@@ -23,7 +23,6 @@ class GameDetailSerializer(serializers.ModelSerializer[Game]):
     like_count = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True)
 
-
     class Meta:
         model = Game
         fields = [
@@ -71,7 +70,6 @@ class GameDetailSerializer(serializers.ModelSerializer[Game]):
             except Review.DoesNotExist:
                 return None
         return None
-
 
     def get_genre_name(self, obj: Game) -> str:
         return ", ".join([genre.name for genre in obj.genres.all()])

@@ -4,21 +4,25 @@ from rest_framework import serializers
 
 from apps.games.models import Game, GameImage, Like, Review
 
-
-class GameImageSerializer(serializers.ModelSerializer[GameImage]):
-    class Meta:
-        model = GameImage
-        fields = ["game_des_img_url"]
+#
+# class GameImageSerializer(serializers.ModelSerializer[GameImage]):
+#     class Meta:
+#         model = GameImage
+#         fields = ["game_des_img_url"]
 
 
 class GameDetailSerializer(serializers.ModelSerializer[Game]):
     game_id = serializers.IntegerField(source="pk", read_only=True)
-    review_count = serializers.IntegerField(source="reviews_count", read_only=True)
+    reviews_count = serializers.IntegerField(read_only=True)
     play_time = serializers.SerializerMethodField()
-    is_like = serializers.SerializerMethodField()
-    user_rated = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    # user_rated = serializers.SerializerMethodField()
     user_rating = serializers.SerializerMethodField()
-    game_images = GameImageSerializer(source="detail_images", many=True, read_only=True)
+    genre_name = serializers.SerializerMethodField()
+    category_name = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
+
 
     class Meta:
         model = Game
@@ -32,28 +36,31 @@ class GameDetailSerializer(serializers.ModelSerializer[Game]):
             "play_time",
             "difficulty",
             "average_rating",
-            "review_count",
-            "is_like",
-            "user_rated",
+            "reviews_count",
+            "is_liked",
+            "like_count",
             "user_rating",
-            "game_images",
+            "age",
+            "genre_name",
+            "category_name",
+            "created_at",
         ]
         read_only_fields = fields
 
     def get_play_time(self, obj: Game) -> str:
         return f"{obj.playtime_min_minutes}–{obj.playtime_max_minutes}분"
 
-    def get_is_like(self, obj: Game) -> bool:
+    def get_is_liked(self, obj: Game) -> bool:
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return Like.objects.filter(user=request.user, game=obj).exists()
         return False
 
-    def get_user_rated(self, obj: Game) -> bool:
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return Review.objects.filter(user=request.user, game=obj).exists()
-        return False
+    # def get_user_rated(self, obj: Game) -> bool:
+    #     request = self.context.get("request")
+    #     if request and request.user.is_authenticated:
+    #         return Review.objects.filter(user=request.user, game=obj).exists()
+    #     return False
 
     def get_user_rating(self, obj: Game) -> Optional[float]:
         request = self.context.get("request")
@@ -64,3 +71,13 @@ class GameDetailSerializer(serializers.ModelSerializer[Game]):
             except Review.DoesNotExist:
                 return None
         return None
+
+
+    def get_genre_name(self, obj: Game) -> str:
+        return ", ".join([genre.name for genre in obj.genres.all()])
+
+    def get_category_name(self, obj: Game) -> str:
+        return ", ".join([cat.name for cat in obj.categories.all()])
+
+    def get_like_count(self, obj: Game) -> int:
+        return obj.liked_by_users.count()

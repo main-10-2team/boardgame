@@ -22,8 +22,6 @@ class GameDetailView(APIView):
     permission_classes = [AllowAny]
     parser_classes = [MultiPartParser, FormParser]
 
-    serializer_class = GameDetailSerializer
-
     @extend_schema(
         summary="게임 상세 조회",
         description="특정 게임의 상세 정보를 조회합니다.",

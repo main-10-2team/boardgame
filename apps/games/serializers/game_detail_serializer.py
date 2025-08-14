@@ -50,7 +50,6 @@ class GameDetailSerializer(serializers.ModelSerializer[Game]):
             return f"{obj.playtime_min_minutes}분"
         return f"{obj.playtime_min_minutes}-{obj.playtime_max_minutes}분"
 
-
     def get_is_liked(self, obj: Game) -> bool:
         request = self.context.get("request")
         if request and request.user.is_authenticated:

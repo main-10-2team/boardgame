@@ -2,9 +2,9 @@ import os
 import re
 import time
 
-import mechanicalsoup#type: ignore
+import mechanicalsoup  # type: ignore
 import numpy as np
-import pandas as pd#type: ignore
+import pandas as pd  # type: ignore
 
 # --- 기존 크롤링 코드는 여기에 그대로 유지 ---
 # (StatefulBrowser 설정, extract_genres 함수, 게임 ID 수집, 상세 정보 크롤링 루프)
@@ -17,7 +17,7 @@ browser = mechanicalsoup.StatefulBrowser(
 
 # 헬퍼 함수: 게임 장르 (테마)를 추출합니다.
 # /credits 페이지를 우선적으로 시도하고, 실패 시 메인 상세 페이지로 폴백합니다.
-def extract_genres(browser_instance, game_id, detail_url):#type: ignore
+def extract_genres(browser_instance, game_id, detail_url):  # type: ignore
     genres = []
 
     # 1. /credits 페이지에서 장르를 시도합니다.
@@ -217,7 +217,7 @@ for idx, game_id in enumerate(game_ids, start=1):
                         category_found = True
                     break
 
-        game_genres = extract_genres(browser, game_id, detail_url)#type: ignore
+        game_genres = extract_genres(browser, game_id, detail_url)  # type: ignore
 
         print(
             f"{idx}위 ({game_id}): {game_title}, 이미지 URL: {game_image_url}, 설명: {game_description[:50]}..., 장르: {game_genres}, 카테고리: {game_categories}, 인원: {game_players}, 시간: {game_playtime}, 연령: {game_age}, 난이도: {game_difficulty}"
@@ -262,7 +262,7 @@ if "playtime" not in df.columns:
 
 
 # 1. 'players' 열을 'min_players'와 'max_players'로 분리
-def parse_players(players_str):#type: ignore
+def parse_players(players_str):  # type: ignore
     if players_str and "정보" not in str(players_str):
         # 괄호 안의 내용을 제외한 부분에서 숫자(1자리 이상)를 찾습니다.
         # 예: "4(베스트:4인,추천:2인)" -> 괄호 밖의 "4"만 찾음
@@ -277,11 +277,11 @@ def parse_players(players_str):#type: ignore
     return np.nan, np.nan
 
 
-df[["min_players", "max_players"]] = df["players"].apply(lambda x: pd.Series(parse_players(x)))#type: ignore
+df[["min_players", "max_players"]] = df["players"].apply(lambda x: pd.Series(parse_players(x)))  # type: ignore
 
 
 # 2. 'playtime' 열을 'playtime_min_minutes'와 'playtime_max_minutes'로 분리
-def parse_playtime(playtime_str):#type: ignore
+def parse_playtime(playtime_str):  # type: ignore
     if playtime_str and "정보" not in str(playtime_str):
         clean_str = re.sub(r"[^\d~-]", "", str(playtime_str))
         if "~" in clean_str:
@@ -298,11 +298,11 @@ def parse_playtime(playtime_str):#type: ignore
     return np.nan, np.nan
 
 
-df[["playtime_min_minutes", "playtime_max_minutes"]] = df["playtime"].apply(lambda x: pd.Series(parse_playtime(x)))#type: ignore
+df[["playtime_min_minutes", "playtime_max_minutes"]] = df["playtime"].apply(lambda x: pd.Series(parse_playtime(x)))  # type: ignore
 
 
 # 3. 'age' 열을 정수형으로 변환
-def parse_age(age_str):#type: ignore
+def parse_age(age_str):  # type: ignore
     if age_str and "정보" not in str(age_str):
         age_str = str(age_str)
         clean_str = re.sub(r"[^\d+]", "", age_str)  # 숫자와 '+'만 남김
@@ -317,7 +317,7 @@ df["age"] = df["age"].apply(parse_age)
 
 
 # 4. 'difficulty' 열을 실수형으로 변환
-def parse_difficulty(difficulty_str):#type: ignore
+def parse_difficulty(difficulty_str):  # type: ignore
     if difficulty_str and "정보" not in str(difficulty_str):
         try:
             return float(str(difficulty_str))

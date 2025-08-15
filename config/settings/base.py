@@ -163,19 +163,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://boardque.vercel.app",
+    "https://boardq.o-r.kr",
 ]
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "authorization",
-    "content-type",
-    "origin",
-    "users-agent",
-    "x-csrftoken",
-    "x-requested-with",
-]
+
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
+    "https://boardque.vercel.app",
+    "https://boardq.o-r.kr",
 ]
 
 # drf 관련 설정

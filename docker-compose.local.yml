@@ -34,6 +34,8 @@ services:
     depends_on:
       - django
     volumes:
+      - /etc/letsencrypt/live/boardq.o-r.kr/fullchain.pem:/etc/letsencrypt/live/boardq.o-r.kr/fullchain.pem:ro
+      - /etc/letsencrypt/live/boardq.o-r.kr/privkey.pem:/etc/letsencrypt/live/boardq.o-r.kr/privkey.pem:ro
       - ./resources/nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
       - static_volume:/boardq/static
       - media_volume:/boardq/media

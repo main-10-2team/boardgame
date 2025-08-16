@@ -1,16 +1,16 @@
 # apps/likes/views/likes_views.py
 
-from typing import Any, cast
+from typing import Any, List, Type, cast
 
 from django.db import transaction
-
-# F 객체를 사용하기 위해 추가
 from django.db.models import F
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
-from rest_framework import status
+from rest_framework import generics, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer  # BaseSerializer 임포트
 from rest_framework.views import APIView
 
 from apps.games.models import Game, Like
@@ -23,6 +23,7 @@ from apps.games.serializers.likes_serializers import (
 from apps.users.models import User
 
 
+# LikeView는 변경 사항이 없으므로 생략합니다.
 @extend_schema(
     tags=["좋아요"],
     summary="보드게임에 좋아요 추가/취소",
@@ -117,10 +118,6 @@ class LikeView(APIView):
             game.save()
             user.save()  # User 모델의 변경사항 저장
 
-            # User 모델의 like_count를 최신 값으로 다시 불러옵니다.
-            # user.refresh_from_db()  # F() 객체 사용 후 최신값 반영
-            # 하지만 응답 데이터는 game.like_count만 사용하므로 굳이 필요없습니다.
-
             response_data = {
                 "status": "success",
                 "action": action,
@@ -130,6 +127,13 @@ class LikeView(APIView):
             }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+# 페이지네이션 클래스 정의
+class LikePagination(PageNumberPagination):
+    page_size = 12
+    page_size_query_param = "page_size"
+    max_page_size = 100
 
 
 @extend_schema(
@@ -183,27 +187,37 @@ class LikeView(APIView):
         ),
     },
 )
-class LikeListView(APIView):
+class LikeListView(generics.ListAPIView[Like]):
     """
     현재 사용자가 좋아요를 누른 게임 목록을 조회합니다.
     GET /api/v1/likes/list/
     """
 
+    serializer_class: Type[BaseSerializer[Any]] = cast(Type[BaseSerializer[Any]], LikedGameSerializer)
     permission_classes = [IsAuthenticated]
+    pagination_class = LikePagination
 
-    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        """
-        사용자가 좋아요를 누른 게임 목록을 반환합니다.
-        """
-        user = cast(User, request.user)
-        liked_games = Like.objects.filter(user=user).select_related("game").order_by("-created_at")
+    def get_queryset(self) -> Any:
+        user = cast(User, self.request.user)
+        return Like.objects.filter(user=user).select_related("game").order_by("-created_at")
 
-        if not liked_games.exists():
+    def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        queryset = self.get_queryset()
+
+        if not queryset.exists():
             return Response({"detail": "좋아요한 게임이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = LikedGameSerializer(liked_games, many=True)  # type: ignore
-        # F() 객체를 사용했기 때문에 user 객체를 다시 불러와야 정확한 like_count를 얻을 수 있습니다.
-        user_refresh = User.objects.get(pk=user.pk)
-        response_data = {"status": "success", "user_like_count": user_refresh.like_count, "likes": serializer.data}
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            user = cast(User, request.user)
+            user_refresh = User.objects.get(pk=user.pk)
 
-        return Response(response_data, status=status.HTTP_200_OK)
+            response_data = {"status": "success", "user_like_count": user_refresh.like_count, "likes": serializer.data}
+            return self.get_paginated_response(response_data)
+
+        # 페이지네이션이 적용되지 않는 경우
+        serializer = self.get_serializer(queryset, many=True)
+        user = cast(User, request.user)
+        user_refresh = User.objects.get(pk=user.pk)
+        return Response({"status": "success", "user_like_count": user_refresh.like_count, "likes": serializer.data})

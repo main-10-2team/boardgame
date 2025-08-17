@@ -1,10 +1,13 @@
+import logging
+from typing import Any
+
 from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiParameter,
     OpenApiResponse,
     extend_schema,
 )
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -13,7 +16,11 @@ from rest_framework.views import APIView
 from apps.recommendation.constants.today_constants import QUESTIONS_DATA
 from apps.recommendation.serializers.today_recommend_serializers import (
     GameQuestionStepSerializer,
+    TodayGameRequestSerializer,
+    TodayRecommendationResponseSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @extend_schema(
@@ -73,3 +80,73 @@ class GameQuestionView(APIView):
         question_data = QUESTIONS_DATA.get(validated_step)
 
         return Response(question_data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    summary="오늘 할 게임 추천 (설문 기반)",
+    description="로그인한 사용자가 설문에서 선택한 모든 답변을 받아, 조건에 맞는 보드게임 10개를 추천하여 반환합니다.",
+    tags=["추천"],
+    request=TodayGameRequestSerializer,
+    responses={
+        200: OpenApiResponse(description="추천 성공", response=TodayRecommendationResponseSerializer),
+        400: OpenApiResponse(
+            description="잘못된 요청: 전달된 설문 답변의 형식이 올바르지 않거나, 값이 유효하지 않습니다.",
+            examples=[
+                OpenApiExample(
+                    "상세 오류 예시",
+                    value={
+                        "message": "입력값에 오류가 있습니다. 아래 내용을 확인해주세요.",
+                        "errors": {
+                            "categories": ["존재하지 않는 카테고리가 포함되어 있습니다: 없는카테고리"],
+                            "players_range": ["인원수 범위에서 최소값은 최대값보다 클 수 없습니다."],
+                        },
+                    },
+                )
+            ],
+        ),
+        401: OpenApiResponse(
+            description="인증 실패: 로그인이 필요하거나, 유효하지 않은 토큰입니다.",
+            response={"type": "object", "properties": {"detail": {"type": "string"}}},
+        ),
+        503: OpenApiResponse(
+            description="서비스 연결 불가: 추천 시스템(Redis)에 문제가 발생했습니다.",
+            response={"type": "object", "properties": {"detail": {"type": "string"}}},
+        ),
+    },
+)
+class TodayGameRecommendationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        try:
+            request_serializer = TodayGameRequestSerializer(data=request.data, context={"request": request})
+
+            if not request_serializer.is_valid():
+                logger.warning(
+                    f"추천 API 유효성 검사 실패: {request_serializer.errors}", extra={"request_data": request.data}
+                )
+                return Response(
+                    {"message": "입력값에 오류가 있습니다.", "errors": request_serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            final_response_data = request_serializer.get_response()
+
+            return Response(final_response_data, status=status.HTTP_200_OK)
+
+        except serializers.ValidationError as e:
+            detail = e.detail
+            error_payload: Any
+            if isinstance(detail, dict):
+                error_payload = detail.get("detail", detail)
+            else:
+                error_payload = detail
+            logger.error(f"추천 API 처리 중 ValidationError 발생: {error_payload}", exc_info=True)
+            if "시스템" in str(error_payload):
+                return Response({"detail": error_payload}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({"detail": error_payload}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            logger.critical(f"추천 API 처리 중 예상치 못한 오류 발생: {e}", exc_info=True)
+            return Response(
+                {"detail": "서버 내부에서 오류가 발생했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

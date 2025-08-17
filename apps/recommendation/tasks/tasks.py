@@ -21,7 +21,7 @@ def run_sync_games_to_redis() -> None:
 
 
 @shared_task  # type: ignore
-def run_update_feature_bounds():
+def run_update_feature_bounds() -> None:
 
     logger.info("Celery Task: 'update_feature_bounds' 명령어를 실행합니다.")
     try:
@@ -29,4 +29,3 @@ def run_update_feature_bounds():
         logger.info("Celery Task: 'update_feature_bounds' 명령어를 성공적으로 완료했습니다.")
     except Exception as e:
         logger.error(f"Celery Task: 'update_feature_bounds' 실행 중 오류 발생: {e}", exc_info=True)
-

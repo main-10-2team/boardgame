@@ -152,4 +152,3 @@ def is_email_find_phone_verified(phone: str) -> bool:
     result = redis.get(f"email_find:verified:{phone}")
     # mypy 오류 해결을 위해 None 체크를 명시적으로 추가
     return result == b"true" if result is not None else False
-

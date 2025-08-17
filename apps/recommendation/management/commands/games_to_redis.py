@@ -28,8 +28,8 @@ class Command(BaseCommand):
             return
 
         try:
-            all_genres = list(Genre.objects.order_by('name').values_list("name", flat=True))
-            all_categories = list(Category.objects.order_by('name').values_list("name", flat=True))
+            all_genres = list(Genre.objects.order_by("name").values_list("name", flat=True))
+            all_categories = list(Category.objects.order_by("name").values_list("name", flat=True))
             games = Game.objects.prefetch_related("genres", "categories").all()
 
             if not games.exists():

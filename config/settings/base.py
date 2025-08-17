@@ -243,7 +243,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "sync-games-to-redis-daily": {
         "task": "apps.recommendation.tasks.run_sync_games_to_redis",
-        "schedule": crontab(minute=0, hour=4, day_of_week='mon'),
+        "schedule": crontab(minute=0, hour=4, day_of_week="mon"),
     },
     "update-feature-bounds-daily": {
         "task": "apps.recommendation.tasks.run_update_feature_bounds",

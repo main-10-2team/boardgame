@@ -9,7 +9,7 @@ from redis.commands.search.field import TextField, VectorField
 from sklearn.preprocessing import MinMaxScaler, MultiLabelBinarizer  # type: ignore
 
 from apps.games.models import Category, Game, Genre
-from core.utils.redis_utils import get_vector_redis_connection
+from apps.recommendation.utils.redis_utils import get_vector_redis_connection
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +28,8 @@ class Command(BaseCommand):
             return
 
         try:
-            all_genres = list(Genre.objects.values_list("name", flat=True))
-            all_categories = list(Category.objects.values_list("name", flat=True))
+            all_genres = list(Genre.objects.order_by('name').values_list("name", flat=True))
+            all_categories = list(Category.objects.order_by('name').values_list("name", flat=True))
             games = Game.objects.prefetch_related("genres", "categories").all()
 
             if not games.exists():
@@ -56,7 +56,7 @@ class Command(BaseCommand):
             )
             scaled_numerical_features = scaler.fit_transform(numerical_features)
 
-            vector_dimension = len(all_genres) + len(all_categories) + 5
+            vector_dimension = len(all_genres) + len(all_categories) + scaled_numerical_features.shape[1]
 
             pipeline = r.pipeline(transaction=False)
             for i, game in enumerate(games):

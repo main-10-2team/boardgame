@@ -6,7 +6,7 @@ from redis import Redis
 from rest_framework import serializers
 
 from apps.games.models import Game, GameViewLog, Like, Review
-from core.utils.redis_utils import find_similar_games, get_vector_redis_connection
+from apps.recommendation.utils.redis_utils import  find_similar_games, get_vector_redis_connection
 
 logger = logging.getLogger(__name__)
 

@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.recommendation.constants.today_constants import QUESTIONS_DATA
-from apps.recommendation.serializers.today_question_serializers import (
+from apps.recommendation.serializers.today_recommend_serializers import (
     GameQuestionStepSerializer,
 )
 

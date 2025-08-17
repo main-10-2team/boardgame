@@ -1,5 +1,5 @@
 import logging
-from typing import Any, cast, Union, Dict
+from typing import Any, Dict, Union, cast
 
 import numpy as np
 from rest_framework import serializers
@@ -16,6 +16,7 @@ from apps.recommendation.utils.redis_utils import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 # min/max 값을 가진 구조의 틀
 class RangeSerializer(serializers.Serializer[Any]):
@@ -69,13 +70,10 @@ class TodayRecommendedGameSerializer(serializers.ModelSerializer[Game]):
             return "어려움"
 
     def get_top_review(self, obj: Game) -> Union[Dict[str, str], None]:
-        top_review_obj = obj.reviewed_by_users.select_related('user').filter(rating__gt=3).order_by("-rating").first()
+        top_review_obj = obj.reviewed_by_users.select_related("user").filter(rating__gt=3).order_by("-rating").first()
 
         if top_review_obj and top_review_obj.content:
-            return {
-                "nickname": top_review_obj.user.nickname,
-                "content": top_review_obj.content
-            }
+            return {"nickname": top_review_obj.user.nickname, "content": top_review_obj.content}
 
         return None
 

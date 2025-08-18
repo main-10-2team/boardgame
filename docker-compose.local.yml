@@ -99,6 +99,24 @@ services:
     networks: # <--- 이 부분 추가
         - ws
 
+  celery-beat: # 작업을 스케줄링하는 '비트' 서비스
+    container_name: celery_beat_service
+    image: boardgame-django
+    env_file:
+      - envs/.local.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+    working_dir: /boardq
+    command: >
+      bash -c "poetry run celery -A config beat -l info"
+    depends_on:
+      django:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - ws
+
 networks:
   ws:
     driver: bridge

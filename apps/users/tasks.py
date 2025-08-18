@@ -27,6 +27,7 @@ def send_verification_email_task(self: Task, email: str, code: str) -> None:
 
 
 # 정기 실행되어 삭제 예정일이 지난 유저들 삭제
+@shared_task  # type: ignore
 def clean_up_due_deletions() -> None:
 
     now = timezone.now()

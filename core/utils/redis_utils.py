@@ -1,3 +1,4 @@
+# redis_utils.py
 import logging
 import os
 from typing import Any, Optional, Set, cast  # Optional과 cast 임포트
@@ -152,3 +153,26 @@ def is_email_find_phone_verified(phone: str) -> bool:
     result = redis.get(f"email_find:verified:{phone}")
     # mypy 오류 해결을 위해 None 체크를 명시적으로 추가
     return result == b"true" if result is not None else False
+
+
+# 이메일 인증 성공 시 임시 토큰을 Redis에 저장
+def store_reset_email_token(email: str, token: str) -> None:
+    """비밀번호 재설정용 인증 성공 토큰을 Redis에 저장합니다. (유효시간 10분)"""
+    redis: Redis = get_redis_connection("default")
+    redis.set(f"reset:email:token:{token}", email, ex=600)
+
+
+# 임시 토큰으로 이메일 주소 조회
+def get_email_from_reset_token(token: str) -> str | None:
+    """토큰을 사용하여 이메일 주소를 조회합니다."""
+    redis: Redis = get_redis_connection("default")
+    email_bytes_raw = redis.get(f"reset:email:token:{token}")
+    email_bytes = cast(Optional[bytes], email_bytes_raw)
+    return email_bytes.decode("utf-8") if email_bytes else None
+
+
+# 임시 토큰 삭제
+def delete_reset_email_token(token: str) -> None:
+    """사용된 토큰을 삭제합니다."""
+    redis: Redis = get_redis_connection("default")
+    redis.delete(f"reset:email:token:{token}")

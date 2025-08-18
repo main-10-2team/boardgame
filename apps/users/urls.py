@@ -27,7 +27,10 @@ from apps.users.views.profile_views import (
 )
 
 from .views.auth.auth_find_id_views import FindIDAPIView
-from .views.auth.auth_find_password_reset_views import PasswordResetVerifyAPIView
+from .views.auth.auth_find_password_reset_views import (
+    PasswordResetSetPasswordAPIView,
+    PasswordResetVerifyCodeAPIView,
+)
 from .views.survey_views import UserSurveyChoiceView, UserSurveySubmitView
 
 urlpatterns = [
@@ -48,7 +51,10 @@ urlpatterns = [
         ResetPasswordRequestCodeAPIView.as_view(),
         name="비밀번호 재설정 인증 코드 요청(비밀번호 찾기)",
     ),
-    path("auth/reset-password/verify/", PasswordResetVerifyAPIView.as_view(), name="인증코드 입력 및 비밀번호 재설정"),
+    path("auth/reset-password/verify/", PasswordResetVerifyCodeAPIView.as_view(), name="인증코드 검증(비밀번호 찾기)"),
+    path(
+        "auth/reset-password/finalize/", PasswordResetSetPasswordAPIView.as_view(), name="비밀번호 재설정(비밀번호찾기)"
+    ),
     path("oauth/google/callback/", GoogleOAuthCallbackView.as_view(), name="google-login-callback"),
     path("oauth/google/login/", GoogleOAuthLoginStartView.as_view(), name="google-login-start"),
     path("admin/user/<int:user_id>/", AdminUserDetailView.as_view(), name="admin-user-info"),

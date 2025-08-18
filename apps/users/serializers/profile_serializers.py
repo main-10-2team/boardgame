@@ -11,7 +11,7 @@ from django.utils.text import slugify
 from rest_framework import serializers
 from unidecode import unidecode
 
-from apps.games.models import Genre
+from apps.games.models import Genre, Game
 from apps.users.models import User
 from core.utils.account_delete_reason import AccountDeletionReasonEnum
 from core.utils.s3_file_upload import S3Uploader
@@ -53,14 +53,21 @@ class UserProfileSerializer(serializers.ModelSerializer[User]):
         return obj.likes.all().count()
 
     def get_popular_genres(self, obj: User) -> list[str]:
-        genre_qs = (
-            Genre.objects.filter(genre_games__game__liked_by_users__user=obj)
-            .annotate(like_count=Count("genre_games__game__liked_by_users"))
-            .order_by("-like_count")[:10]
+        popular_liked_games_pks = (
+            Game.objects.filter(liked_by_users__user=obj)
+            .annotate(total_likes=Count("liked_by_users"))
+            .order_by("-total_likes")
+            .values_list("pk", flat=True)[:20]
         )
 
-        if not genre_qs.exists():
+        if not list(popular_liked_games_pks):
             return []
+
+        genre_qs = (
+            Genre.objects.filter(genre_games__game__pk__in=popular_liked_games_pks)
+            .annotate(game_count=Count("genre_games"))
+            .order_by("-game_count", "name")[:10]
+        )
 
         return [genre.name for genre in genre_qs]
 

@@ -235,18 +235,3 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
 APP_FRONTEND_URL = os.getenv("APP_FRONTEND_URL", "http://localhost:3000")
 
-
-CELERY_BEAT_SCHEDULE = {
-    "daily-user-deletion-cleanup": {
-        "task": "apps.users.tasks.clean_up_due_deletions",
-        "schedule": crontab(minute=0, hour=3),
-    },
-    "sync-games-to-redis-daily": {
-        "task": "apps.recommendation.tasks.run_sync_games_to_redis",
-        "schedule": crontab(minute=0, hour=4, day_of_week="mon"),
-    },
-    "update-feature-bounds-daily": {
-        "task": "apps.recommendation.tasks.run_update_feature_bounds",
-        "schedule": crontab(minute=30, hour=3),
-    },
-}

@@ -83,8 +83,8 @@ class GameQuestionView(APIView):
 
 
 @extend_schema(
-    summary="오늘 할 게임 추천 (설문 기반)",
-    description="로그인한 사용자가 설문에서 선택한 모든 답변을 받아, 조건에 맞는 보드게임 10개를 추천하여 반환합니다.",
+    summary="오늘 할 게임 추천",
+    description="로그인한 사용자가 선택한 모든 답변을 받아, 조건에 맞는 보드게임 10개를 추천하여 반환합니다.",
     tags=["추천"],
     request=TodayGameRequestSerializer,
     responses={

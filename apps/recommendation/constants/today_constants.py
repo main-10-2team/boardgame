@@ -30,7 +30,7 @@ QUESTIONS_DATA = {
     3: {
         "key": "playtime_range",
         "text": "3. 원하시는 플레이타임을 골라주세요",
-        "type": "multi-select",
+        "type": "single-select",
         "options": [
             {"id": 1, "label": "20분 이내", "min": 0, "max": 20},
             {"id": 2, "label": "20–40분", "min": 20, "max": 40},

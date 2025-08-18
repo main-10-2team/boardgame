@@ -84,15 +84,15 @@ class TodayRecommendationResponseSerializer(serializers.Serializer[Any]):
 
 
 class TodayGameRequestSerializer(serializers.Serializer[Any]):
-    categories = serializers.ListField(child=serializers.CharField(), required=False, default=[])
+    categories = serializers.ListField(child=serializers.CharField(), required=True)
     players_range = RangeSerializer(required=True)
-    playtime_range = serializers.ListField(child=RangeSerializer(), required=True)
+    playtime_range = RangeSerializer(required=True)
     age_group = RangeSerializer(required=True)
     difficulty_range = RangeSerializer(required=True)
 
     def validate_categories(self, value: list[str]) -> list[str]:
         all_categories = get_all_categories()
-        invalid_categories = [cat for cat in value if cat not in all_categories]
+        invalid_categories = [cat for cat in value if cat not in all_categories and cat != "상관없음"]
         if invalid_categories:
             raise serializers.ValidationError(
                 f"존재하지 않는 카테고리가 포함되어 있습니다: {', '.join(invalid_categories)}"
@@ -111,14 +111,17 @@ class TodayGameRequestSerializer(serializers.Serializer[Any]):
         data = self.validated_data
         all_genres, all_categories = get_all_genres(), get_all_categories()
         genre_vector = np.zeros(len(all_genres), dtype=np.float32)
-        category_binarizer = MultiLabelBinarizer(classes=all_categories)
-        category_vector = category_binarizer.fit_transform([data["categories"]])[0]
+        if "상관없음" in data["categories"] or not data["categories"]:
+            category_vector = np.zeros(len(all_categories), dtype=np.float32)
+        else:
+            category_binarizer = MultiLabelBinarizer(classes=all_categories)
+            category_vector = category_binarizer.fit_transform([data["categories"]])[0]
 
         age = (data["age_group"]["min"] + data["age_group"]["max"]) / 2
         players_min = data["players_range"]["min"]
         players_max = data["players_range"]["max"]
-        playtime_min = np.mean([p["min"] for p in data["playtime_range"]])
-        playtime_max = np.mean([p["max"] for p in data["playtime_range"]])
+        playtime_min = data["playtime_range"]["min"]
+        playtime_max = data["playtime_range"]["max"]
         difficulty = (data["difficulty_range"]["min"] + data["difficulty_range"]["max"]) / 2
 
         numerical_vector = np.array(

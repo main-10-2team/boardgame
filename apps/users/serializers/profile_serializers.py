@@ -11,7 +11,7 @@ from django.utils.text import slugify
 from rest_framework import serializers
 from unidecode import unidecode
 
-from apps.games.models import Genre, Game
+from apps.games.models import Game, Genre
 from apps.users.models import User
 from core.utils.account_delete_reason import AccountDeletionReasonEnum
 from core.utils.s3_file_upload import S3Uploader

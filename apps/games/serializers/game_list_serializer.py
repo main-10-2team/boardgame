@@ -10,6 +10,7 @@ class GameListSerializer(serializers.ModelSerializer[Game]):
     genre = serializers.SerializerMethodField()
     category = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
+    difficulty = serializers.SerializerMethodField()
 
     class Meta:
         model = Game
@@ -81,18 +82,18 @@ class GameFilterSerializer(serializers.Serializer[Any]):
         if "playtime_max_minutes" in data:
             queryset = queryset.filter(playtime_max_minutes__lte=data["playtime_max_minutes"])
 
-        difficulty = data.get("difficulty")
-        if difficulty:
-            diff_map = {"쉬움": (0.0, 2.0), "중급": (2.0, 4.0), "어려움": (4.0, 5.0)}
-            if difficulty in diff_map:
-                low, high = diff_map[difficulty]
-                queryset = queryset.filter(difficulty__gte=low, difficulty__lt=high)
-            else:
-                # try:
-                #     p = float(difficulty)
-                #     queryset = queryset.filter(difficulty__gte=p - 0.5, difficulty__lte=p + 0.5)
-                # except ValueError:
-                raise serializers.ValidationError({"difficulty": "난이도는 '쉬움', '중급', '어려움' 또는 숫자입니다."})
+        # difficulty = data.get("difficulty")
+        # if difficulty:
+        #     diff_map = {"쉬움": (0.0, 2.0), "중급": (2.0, 4.0), "어려움": (4.0, 5.0)}
+        #     if difficulty in diff_map:
+        #         low, high = diff_map[difficulty]
+        #         queryset = queryset.filter(difficulty__gte=low, difficulty__lt=high)
+        #     else:
+        #         try:
+        #             p = float(difficulty)
+        #             queryset = queryset.filter(difficulty__gte=p - 0.5, difficulty__lte=p + 0.5)
+        #         except ValueError:
+        #         raise serializers.ValidationError({"difficulty": "난이도는 '쉬움', '중급', '어려움' 또는 숫자입니다."})
 
         genres = data.get("genres")
         if genres:

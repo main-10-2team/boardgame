@@ -21,6 +21,7 @@ class GameDetailSerializer(serializers.ModelSerializer[Game]):
     category = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True)
+    difficulty = serializers.SerializerMethodField()
 
     class Meta:
         model = Game
@@ -71,6 +72,14 @@ class GameDetailSerializer(serializers.ModelSerializer[Game]):
             except Review.DoesNotExist:
                 return None
         return None
+
+    def get_difficulty(self, obj: Game) -> str:
+        if obj.difficulty < 2.0:
+            return "쉬움"
+        elif obj.difficulty < 4.0:
+            return "중급"
+        else:
+            return "어려움"
 
     def get_genre(self, obj: Game) -> str:
         return ", ".join([genre.name for genre in obj.genres.all()])

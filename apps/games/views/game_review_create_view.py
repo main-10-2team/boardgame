@@ -35,7 +35,6 @@ class GameReviewCreateView(APIView):
         tags=["게임 리뷰"],
         request=GameReviewCreateSerializer,
         responses={
-            # ✅ 예시는 OpenApiResponse 안의 examples로
             201: OpenApiResponse(
                 response=GameReviewCreateResponseSerializer,
                 examples=[

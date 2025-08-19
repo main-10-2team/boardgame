@@ -63,21 +63,21 @@ class GameListView(APIView):
                 is_liked_by_user=Exists(Like.objects.filter(user_id=user.user_id, game=OuterRef("pk")))
             )
 
-        genre_rankings = {}
-        for genre in Genre.objects.all():
-            genre_games = Game.objects.filter(game_genres__genre=genre).order_by("-like_count")[:5]
-            genre_games = genre_games.annotate(is_liked_by_user=Exists(Like.objects.filter(game=OuterRef("pk"))))
-            genre_rankings[genre.name] = self.serializer_class(
-                genre_games, many=True, context={"request": request}
-            ).data
-
-        category_rankings = {}
-        for category in Category.objects.all():
-            category_games = Game.objects.filter(categories__in=[category]).order_by("-like_count")[:5]
-            category_games = category_games.annotate(is_liked_by_user=Exists(Like.objects.filter(game=OuterRef("pk"))))
-            category_rankings[category.name] = self.serializer_class(
-                category_games, many=True, context={"request": request}
-            ).data
+        # genre_rankings = {}
+        # for genre in Genre.objects.all():
+        #     genre_games = Game.objects.filter(game_genres__genre=genre).order_by("-like_count")[:5]
+        #     genre_games = genre_games.annotate(is_liked_by_user=Exists(Like.objects.filter(game=OuterRef("pk"))))
+        #     genre_rankings[genre.name] = self.serializer_class(
+        #         genre_games, many=True, context={"request": request}
+        #     ).data
+        #
+        # category_rankings = {}
+        # for category in Category.objects.all():
+        #     category_games = Game.objects.filter(categories__in=[category]).order_by("-like_count")[:5]
+        #     category_games = category_games.annotate(is_liked_by_user=Exists(Like.objects.filter(game=OuterRef("pk"))))
+        #     category_rankings[category.name] = self.serializer_class(
+        #         category_games, many=True, context={"request": request}
+        #     ).data
 
         paginator = PageNumberPagination()
         paginator.page_size = 12
@@ -87,7 +87,7 @@ class GameListView(APIView):
         serializer = self.serializer_class(page, many=True, context={"request": request})
         response = paginator.get_paginated_response(serializer.data)
 
-        response.data["genre_rankings"] = genre_rankings
-        response.data["category_rankings"] = category_rankings
+        # response.data["genre_rankings"] = genre_rankings
+        # response.data["category_rankings"] = category_rankings
 
         return response

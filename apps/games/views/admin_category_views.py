@@ -12,7 +12,7 @@ from apps.games.models import Category, GameCategory
 from apps.games.serializers.admin_category_serializers import (
     AdminCategoryCreateSerializer,
     AdminCategoryListSerializer,
-    AdminCategoryUpdateSerializer,
+    AdminCategoryUpdateSerializer, AdminCategoryDeleteSerializer,
 )
 from core.utils.permission import IsAdminRole
 
@@ -132,6 +132,7 @@ class AdminCategoryUpdateView(generics.UpdateAPIView[Category]):
 )
 class AdminCategoryDeleteView(generics.DestroyAPIView[Category]):
     queryset = Category.objects.all()
+    serializer_class = AdminCategoryDeleteSerializer
     permission_classes = [IsAuthenticated, IsAdminRole]
     lookup_field: str = "category_id"
 

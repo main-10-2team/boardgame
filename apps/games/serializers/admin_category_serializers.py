@@ -75,3 +75,12 @@ class AdminCategoryListSerializer(serializers.ModelSerializer[Category]):
     class Meta:
         model = Category
         fields = ["id", "name", "created_at", "updated_at"]
+
+
+class AdminCategoryDeleteSerializer(serializers.ModelSerializer[Category]):
+    id = serializers.IntegerField(source="category_id", read_only=True)
+    message = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Category
+        fields = ["id", "message"]

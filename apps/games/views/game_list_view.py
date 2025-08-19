@@ -50,6 +50,8 @@ class GameListView(APIView):
         filter_serializer.is_valid(raise_exception=True)
         queryset = filter_serializer.filter_queryset(queryset)
 
+        queryset = queryset.distinct()
+
         sort_by = request.query_params.get("sort_by", "popularity")
         sort_fields = {
             "popularity": "-like_count",

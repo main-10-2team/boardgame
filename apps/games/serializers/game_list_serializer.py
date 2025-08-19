@@ -1,8 +1,6 @@
 from typing import Any
-
 from django.db.models import QuerySet
 from rest_framework import serializers
-
 from apps.games.models import Game, Like
 
 

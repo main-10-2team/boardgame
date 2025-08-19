@@ -198,6 +198,8 @@ class LikeListView(generics.ListAPIView[Like]):
     pagination_class = LikePagination
 
     def get_queryset(self) -> Any:
+        if getattr(self, "swagger_fake_view", False):
+            return Like.objects.none()
         user = cast(User, self.request.user)
         return Like.objects.filter(user=user).select_related("game").order_by("-created_at")
 

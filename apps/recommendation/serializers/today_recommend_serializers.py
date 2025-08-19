@@ -39,11 +39,17 @@ class TodayRecommendedGameSerializer(serializers.ModelSerializer[Game]):
     players = serializers.SerializerMethodField()
     difficulty = serializers.SerializerMethodField()
     top_review = serializers.SerializerMethodField()
+    genre = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Game
         fields = [
+            "game_id",
             "title",
+            "like_count",
+            "average_rating",
+            "genre",
             "thumbnail_url",
             "category",
             "players",

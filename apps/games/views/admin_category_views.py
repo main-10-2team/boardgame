@@ -11,8 +11,9 @@ from rest_framework.response import Response
 from apps.games.models import Category, GameCategory
 from apps.games.serializers.admin_category_serializers import (
     AdminCategoryCreateSerializer,
+    AdminCategoryDeleteSerializer,
     AdminCategoryListSerializer,
-    AdminCategoryUpdateSerializer, AdminCategoryDeleteSerializer,
+    AdminCategoryUpdateSerializer,
 )
 from core.utils.permission import IsAdminRole
 

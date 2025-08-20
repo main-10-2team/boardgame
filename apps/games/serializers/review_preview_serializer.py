@@ -7,6 +7,7 @@ from apps.games.models import Game, GameImage, Review
 
 class ReviewPreviewSerializer(serializers.ModelSerializer[Review]):
     nickname = serializers.CharField(source="user.nickname", read_only=True)
+    profile_image = serializers.URLField(source="user.profile_image", read_only=True)
     rating = serializers.FloatField()
     content = serializers.CharField()
     game_title = serializers.CharField(source="game.title", read_only=True)
@@ -18,6 +19,7 @@ class ReviewPreviewSerializer(serializers.ModelSerializer[Review]):
         fields = [
             "game_id",
             "nickname",
+            "profile_image",
             "rating",
             "content",
             "images",

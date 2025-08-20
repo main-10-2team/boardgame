@@ -62,6 +62,7 @@ class Game(models.Model):
         verbose_name_plural = "게임 목록"
         indexes = [
             models.Index(fields=["-like_count", "-average_rating"]),
+            models.Index(fields=["-created_at"]),
         ]
 
     def __str__(self) -> str:

@@ -7,6 +7,7 @@ from sklearn.preprocessing import MultiLabelBinarizer  # type: ignore
 
 from apps.games.models import Game
 from apps.recommendation.constants.today_constants import QUESTIONS_DATA
+from apps.recommendation.serializers.recommend_serializers import RecommendedGameSerializer
 from apps.recommendation.utils.redis_utils import (
     find_similar_games,
     get_all_categories,
@@ -34,46 +35,24 @@ class GameQuestionStepSerializer(serializers.Serializer[Any]):
         return value
 
 
-class TodayRecommendedGameSerializer(serializers.ModelSerializer[Game]):
-    category = serializers.SerializerMethodField()
-    players = serializers.SerializerMethodField()
-    difficulty = serializers.SerializerMethodField()
+class TodayRecommendedGameSerializer(RecommendedGameSerializer):
     top_review = serializers.SerializerMethodField()
-    genre = serializers.SerializerMethodField()
 
 
-    class Meta:
-        model = Game
+    class Meta(RecommendedGameSerializer.Meta):
         fields = [
             "game_id",
             "title",
+            "thumbnail_url",
             "like_count",
+            "reviews_count",
             "average_rating",
             "genre",
-            "thumbnail_url",
             "category",
-            "players",
             "difficulty",
             "top_review",
             "description",
         ]
-
-    def get_category(self, obj: Game) -> str | None:
-        first_category = obj.categories.first()
-        return first_category.name if first_category else None
-
-    def get_players(self, obj: Game) -> str:
-        if obj.min_players == obj.max_players:
-            return f"{obj.min_players}인"
-        return f"{obj.min_players}-{obj.max_players}인"
-
-    def get_difficulty(self, obj: Game) -> str:
-        if obj.difficulty < 2.0:
-            return "쉬움"
-        elif obj.difficulty < 4.0:
-            return "중급"
-        else:
-            return "어려움"
 
     def get_top_review(self, obj: Game) -> Union[Dict[str, str], None]:
         top_review_obj = obj.reviewed_by_users.select_related("user").filter(rating__gt=3).order_by("-rating").first()

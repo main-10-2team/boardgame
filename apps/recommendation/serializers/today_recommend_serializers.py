@@ -53,6 +53,7 @@ class TodayRecommendedGameSerializer(RecommendedGameSerializer):
             "difficulty",
             "top_review",
             "description",
+            "is_liked",
         ]
 
     def get_top_review(self, obj: Game) -> Union[Dict[str, str], None]:

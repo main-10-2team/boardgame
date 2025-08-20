@@ -46,7 +46,7 @@ class SendEmailCodeView(APIView):
 
         send_verification_email_task.delay(email, code)
 
-        return Response({"message": f"인증 코드{code}가 이메일로 전송되었습니다."}, status=status.HTTP_200_OK)
+        return Response({"message": f"인증 코드가 이메일로 전송되었습니다."}, status=status.HTTP_200_OK)
 
 
 class VerifyEmailCodeView(APIView):

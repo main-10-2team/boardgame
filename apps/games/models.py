@@ -60,6 +60,9 @@ class Game(models.Model):
         db_table = "game"
         verbose_name = "게임"
         verbose_name_plural = "게임 목록"
+        indexes = [
+            models.Index(fields=["-like_count", "-average_rating"]),
+        ]
 
     def __str__(self) -> str:
         return self.title

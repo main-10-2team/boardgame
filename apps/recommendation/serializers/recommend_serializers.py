@@ -2,6 +2,7 @@ import logging
 from typing import Any, cast
 
 import numpy as np
+from django.db.models import Exists, OuterRef
 from redis import Redis
 from rest_framework import serializers
 
@@ -52,10 +53,7 @@ class RecommendedGameSerializer(serializers.ModelSerializer[Game]):
             return "어려움"
 
     def get_is_liked(self, obj: Game) -> bool:
-        request = self.context.get("request")
-        if not request or not request.user.is_authenticated:
-            return False
-        return Like.objects.filter(user=request.user, game=obj).exists()
+        return getattr(obj, "is_liked", False)
 
 
 class RecommendationResponseSerializer(serializers.Serializer[Any]):
@@ -71,7 +69,7 @@ class RecommendationSerializer(serializers.Serializer[Any]):
         self.recommended_games: list[Game] = []
         self.positive_interaction_game_ids: set[int] = set()
 
-    def get_recommendations(self) -> list[Game]:
+    def get_recommendations(self) -> list[Any]:
         if not self.user or not self.user.is_authenticated:
             raise serializers.ValidationError({"detail": "인증되지 않은 사용자입니다."})
 
@@ -115,13 +113,23 @@ class RecommendationSerializer(serializers.Serializer[Any]):
 
         return cast(np.ndarray, np.mean(game_vectors, axis=0))
 
-    def _get_fallback_recommendations(self) -> list[Game]:
-        fallback_games = Game.objects.order_by("-like_count", "-average_rating")[:10]
+    def _get_fallback_recommendations(self) -> list[Any]:
+        user_likes = Like.objects.filter(user=self.user, game=OuterRef("pk"))
+        fallback_games = (
+            Game.objects.annotate(is_liked=Exists(user_likes))
+            .prefetch_related("genres", "categories")
+            .order_by("-like_count", "-average_rating")[:10]
+        )
+
         if not fallback_games.exists():
-            fallback_games = Game.objects.order_by("-created_at")[:10]
+            fallback_games = (
+                Game.objects.annotate(is_liked=Exists(user_likes))
+                .prefetch_related("genres", "categories")
+                .order_by("-created_at")[:10]
+            )
         return list(fallback_games)
 
-    def _get_vector_recommendations(self, redis_conn: Redis, user_vector: np.ndarray, k: int = 10) -> list[Game]:
+    def _get_vector_recommendations(self, redis_conn: Redis, user_vector: np.ndarray, k: int = 10) -> list[Any]:
 
         similar_game_ids = find_similar_games(
             redis_conn=redis_conn,
@@ -130,7 +138,14 @@ class RecommendationSerializer(serializers.Serializer[Any]):
             k=k,
         )
 
-        games_map = {game.game_id: game for game in Game.objects.filter(game_id__in=similar_game_ids)}
+        user_likes = Like.objects.filter(user=self.user, game=OuterRef("pk"))
+        games_queryset = (
+            Game.objects.filter(game_id__in=similar_game_ids)
+            .annotate(is_liked=Exists(user_likes))
+            .prefetch_related("genres", "categories")
+        )
+
+        games_map = {game.game_id: game for game in games_queryset}
         recommended_games = [games_map[game_id] for game_id in similar_game_ids if game_id in games_map]
 
         if len(recommended_games) < k:
@@ -139,7 +154,10 @@ class RecommendationSerializer(serializers.Serializer[Any]):
             exclude_ids = self.positive_interaction_game_ids.union(similar_game_ids)
 
             fallback_games = list(
-                Game.objects.exclude(game_id__in=exclude_ids).order_by("-like_count", "-average_rating")[:num_needed]
+                Game.objects.exclude(game_id__in=exclude_ids)
+                .annotate(is_liked=Exists(user_likes))
+                .prefetch_related("genres", "categories")
+                .order_by("-like_count", "-average_rating")[:num_needed]
             )
             recommended_games.extend(fallback_games)
 
@@ -150,7 +168,10 @@ class RecommendationSerializer(serializers.Serializer[Any]):
 
                 if final_num_needed > 0:
                     newest_games = list(
-                        Game.objects.exclude(game_id__in=final_exclude_ids).order_by("-created_at")[:final_num_needed]
+                        Game.objects.exclude(game_id__in=final_exclude_ids)
+                        .annotate(is_liked=Exists(user_likes))
+                        .prefetch_related("genres", "categories")
+                        .order_by("-created_at")[:final_num_needed]
                     )
                     recommended_games.extend(newest_games)
         return recommended_games

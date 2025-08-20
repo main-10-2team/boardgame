@@ -2,10 +2,11 @@ import logging
 from typing import Any, Dict, Union, cast
 
 import numpy as np
+from django.db.models import OuterRef, Subquery
 from rest_framework import serializers
 from sklearn.preprocessing import MultiLabelBinarizer  # type: ignore
 
-from apps.games.models import Game
+from apps.games.models import Game, Review
 from apps.recommendation.constants.today_constants import QUESTIONS_DATA
 from apps.recommendation.serializers.recommend_serializers import (
     RecommendedGameSerializer,
@@ -57,11 +58,8 @@ class TodayRecommendedGameSerializer(RecommendedGameSerializer):
         ]
 
     def get_top_review(self, obj: Game) -> Union[Dict[str, str], None]:
-        top_review_obj = obj.reviewed_by_users.select_related("user").filter(rating__gt=3).order_by("-rating").first()
-
-        if top_review_obj and top_review_obj.content:
-            return {"nickname": top_review_obj.user.nickname, "content": top_review_obj.content}
-
+        if hasattr(obj, "top_review_content") and obj.top_review_content:
+            return {"nickname": obj.top_review_nickname, "content": obj.top_review_content}  # type: ignore
         return None
 
 
@@ -125,20 +123,40 @@ class TodayGameRequestSerializer(serializers.Serializer[Any]):
         logger.info("사용자 설문 답변 기반의 쿼리 벡터를 성공적으로 생성했습니다.")
         return cast(np.ndarray, np.concatenate([genre_vector, category_vector, numerical_vector]).astype(np.float32))
 
-    def _get_recommendations(self) -> list[Game]:
+    def _get_recommendations(self) -> list[Any]:
         redis_conn = get_vector_redis_connection()
         if redis_conn is None:
             raise serializers.ValidationError({"detail": "추천 시스템에 연결할 수 없습니다."})
         query_vector = self._create_query_vector()
         similar_game_ids = find_similar_games(redis_conn=redis_conn, user_vector=query_vector, exclude_ids=set(), k=10)
-        games_map = {game.game_id: game for game in Game.objects.filter(game_id__in=similar_game_ids)}
+
+        top_review_content_subquery = (
+            Review.objects.filter(game=OuterRef("pk"), rating__gt=3).order_by("-rating").values("content")[:1]
+        )
+
+        top_review_nickname_subquery = (
+            Review.objects.filter(game=OuterRef("pk"), rating__gt=3)
+            .select_related("user")
+            .order_by("-rating")
+            .values("user__nickname")[:1]
+        )
+
+        games_queryset = Game.objects.filter(game_id__in=similar_game_ids).annotate(
+            top_review_content=Subquery(top_review_content_subquery),
+            top_review_nickname=Subquery(top_review_nickname_subquery),
+        )
+        games_map = {game.game_id: game for game in games_queryset}
         recommended_games = [games_map[game_id] for game_id in similar_game_ids if game_id in games_map]
+
         if len(recommended_games) < 10:
             num_needed = 10 - len(recommended_games)
             fallback_games = list(
-                Game.objects.exclude(game_id__in=set(similar_game_ids)).order_by("-like_count", "-average_rating")[
-                    :num_needed
-                ]
+                Game.objects.exclude(game_id__in=set(similar_game_ids))
+                .annotate(
+                    top_review_content=Subquery(top_review_content_subquery),
+                    top_review_nickname=Subquery(top_review_nickname_subquery),
+                )
+                .order_by("-like_count", "-average_rating")[:num_needed]
             )
             recommended_games.extend(fallback_games)
         return recommended_games

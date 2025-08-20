@@ -7,7 +7,9 @@ from sklearn.preprocessing import MultiLabelBinarizer  # type: ignore
 
 from apps.games.models import Game
 from apps.recommendation.constants.today_constants import QUESTIONS_DATA
-from apps.recommendation.serializers.recommend_serializers import RecommendedGameSerializer
+from apps.recommendation.serializers.recommend_serializers import (
+    RecommendedGameSerializer,
+)
 from apps.recommendation.utils.redis_utils import (
     find_similar_games,
     get_all_categories,
@@ -37,7 +39,6 @@ class GameQuestionStepSerializer(serializers.Serializer[Any]):
 
 class TodayRecommendedGameSerializer(RecommendedGameSerializer):
     top_review = serializers.SerializerMethodField()
-
 
     class Meta(RecommendedGameSerializer.Meta):
         fields = [

@@ -136,6 +136,8 @@ class RecommendationSerializer(serializers.Serializer[Any]):
             user_vector=user_vector,
             exclude_ids=self.positive_interaction_game_ids,
             k=k,
+            index_name="game_index_full",
+            vector_field_name="vector_full",
         )
 
         user_likes = Like.objects.filter(user=self.user, game=OuterRef("pk"))

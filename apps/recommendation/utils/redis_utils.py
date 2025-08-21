@@ -26,11 +26,22 @@ def get_vector_redis_connection() -> Optional[Redis]:
 
 
 # 벡터와 유사한 게임 목록 Redis에서 검색 후 반환
-def find_similar_games(redis_conn: Redis, user_vector: np.ndarray, exclude_ids: Set[int], k: int = 10) -> list[int]:
-    index_name = "game_index"
+def find_similar_games(
+    redis_conn: Redis,
+    user_vector: np.ndarray,
+    exclude_ids: Set[int],
+    k: int = 10,
+    index_name: str = "game_index_full",
+    vector_field_name: str = "vector_full",
+) -> list[int]:
     num_to_request = k + len(exclude_ids)
 
-    q = Query("*=>[KNN $K @vector $user_vec AS vector_score]").sort_by("vector_score").return_fields("id").dialect(2)
+    q = (
+        Query(f"*=>[KNN $K @{vector_field_name} $user_vec AS vector_score]")
+        .sort_by("vector_score")
+        .return_fields("id")
+        .dialect(2)
+    )
     query_params: dict[str, Any] = {
         "K": num_to_request,
         "user_vec": user_vector.astype(np.float32).tobytes(),

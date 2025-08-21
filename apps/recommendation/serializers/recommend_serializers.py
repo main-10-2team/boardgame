@@ -1,6 +1,7 @@
 import logging
 from collections import Counter
-from typing import Any, Counter as TypingCounter
+from typing import Any
+from typing import Counter as TypingCounter
 
 import numpy as np
 from django.db.models import Exists, OuterRef, QuerySet

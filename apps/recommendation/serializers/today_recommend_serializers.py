@@ -94,8 +94,7 @@ class TodayGameRequestSerializer(serializers.Serializer[Any]):
 
     def _create_query_vector(self) -> np.ndarray:
         data = self.validated_data
-        all_genres, all_categories = get_all_genres(), get_all_categories()
-        genre_vector = np.zeros(len(all_genres), dtype=np.float32)
+        all_categories = get_all_categories()
         if "상관없음" in data["categories"] or not data["categories"]:
             category_vector = np.zeros(len(all_categories), dtype=np.float32)
         else:
@@ -121,14 +120,21 @@ class TodayGameRequestSerializer(serializers.Serializer[Any]):
         )
 
         logger.info("사용자 설문 답변 기반의 쿼리 벡터를 성공적으로 생성했습니다.")
-        return cast(np.ndarray, np.concatenate([genre_vector, category_vector, numerical_vector]).astype(np.float32))
+        return cast(np.ndarray, np.concatenate([category_vector, numerical_vector]).astype(np.float32))
 
     def _get_recommendations(self) -> list[Any]:
         redis_conn = get_vector_redis_connection()
         if redis_conn is None:
             raise serializers.ValidationError({"detail": "추천 시스템에 연결할 수 없습니다."})
         query_vector = self._create_query_vector()
-        similar_game_ids = find_similar_games(redis_conn=redis_conn, user_vector=query_vector, exclude_ids=set(), k=10)
+        similar_game_ids = find_similar_games(
+            redis_conn=redis_conn,
+            user_vector=query_vector,
+            exclude_ids=set(),
+            k=10,
+            index_name="game_index_today",
+            vector_field_name="vector_today",
+        )
 
         top_review_content_subquery = (
             Review.objects.filter(game=OuterRef("pk"), rating__gt=3).order_by("-rating").values("content")[:1]

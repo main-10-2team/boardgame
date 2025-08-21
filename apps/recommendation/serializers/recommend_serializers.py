@@ -100,7 +100,7 @@ class RecommendationSerializer(serializers.Serializer[Any]):
         game_vectors = []
         pipeline = redis_conn.pipeline(transaction=False)
         for game_id in self.positive_interaction_game_ids:
-            pipeline.hget(f"game:{game_id}", "vector")
+            pipeline.hget(f"game:{game_id}", "vector_full")
 
         results = pipeline.execute()
         for vec_bytes in results:
@@ -116,14 +116,16 @@ class RecommendationSerializer(serializers.Serializer[Any]):
     def _get_fallback_recommendations(self) -> list[Any]:
         user_likes = Like.objects.filter(user=self.user, game=OuterRef("pk"))
         fallback_games = (
-            Game.objects.annotate(is_liked=Exists(user_likes))
+            Game.objects.exclude(game_id__in=self.positive_interaction_game_ids)
+            .annotate(is_liked=Exists(user_likes))
             .prefetch_related("genres", "categories")
             .order_by("-like_count", "-average_rating")[:10]
         )
 
         if not fallback_games.exists():
             fallback_games = (
-                Game.objects.annotate(is_liked=Exists(user_likes))
+                Game.objects.exclude(game_id__in=self.positive_interaction_game_ids)
+                .annotate(is_liked=Exists(user_likes))
                 .prefetch_related("genres", "categories")
                 .order_by("-created_at")[:10]
             )

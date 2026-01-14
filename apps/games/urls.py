@@ -1,6 +1,10 @@
 from django.urls import path
 
-from apps.games.views.admin_boardgame_views import AdminGameRegisterView
+from apps.games.views.admin_boardgame_views import (
+    AdminGameDeleteView,
+    AdminGameRegisterView,
+    AdminGameUpdateView,
+)
 from apps.games.views.admin_category_views import (
     AdminCategoryCreateView,
     AdminCategoryDeleteView,
@@ -42,13 +46,15 @@ urlpatterns = [
     path("admin/reviews/", AdminReviewListview.as_view(), name="admin-review-list"),
     path("admin/reviews/<int:review_id>/", AdminReviewDeleteView.as_view(), name="admin_review_delete"),
     path("admin/genres/list", AdminGenreListView.as_view(), name="admin-genre-list"),
-    path("admin/genres/register", AdminGenreRegisterView.as_view(), name="admin-genre-register"),
+    path("admin/genres/", AdminGenreRegisterView.as_view(), name="admin-genre-register"),
     path("admin/genres/<int:genre_id>", AdminGenreUpdateView.as_view(), name="admin-genre-update"),
     path("admin/genres/delete<int:genre_id>", AdminGenreDeleteView.as_view(), name="admin-genre-delete"),
     path("likes/", LikeView.as_view(), name="like"),
     path("likes/list/", LikeListView.as_view(), name="like-list"),
     path("likes/remove/", LikeRemoveView.as_view(), name="like_remove"),
-    path("admin/game", AdminGameRegisterView.as_view(), name="admin-game-register"),
+    path("admin/games/register/", AdminGameRegisterView.as_view(), name="admin-game-register"),
+    path("admin/games/<int:game_id>/", AdminGameUpdateView.as_view(), name="admin-game-update"),
+    path("admin/games/<int:game_id>/delete/", AdminGameDeleteView.as_view(), name="admin-game-delete"),
     path("admin/categories/Create", AdminCategoryCreateView.as_view(), name="admin-category-create"),
     path("admin/categories/List", AdminCategoryListView.as_view(), name="admin-category-list"),
     path("admin/categories/Update/<int:category_id>", AdminCategoryUpdateView.as_view(), name="admin-category-update"),
